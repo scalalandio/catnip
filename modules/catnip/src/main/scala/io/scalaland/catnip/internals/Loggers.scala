@@ -24,5 +24,5 @@ private[internals] trait Loggers {
   }
 
   private def shouldLog(level: Level): Boolean =
-    Option(System.getProperty("pulp.debug")).flatMap(Level.findByName).getOrElse(Level.Off).ordinal <= level.ordinal
+    Option(System.getProperty("catnip.debug")).flatMap(Level.findByName).getOrElse(Level.Off).ordinal <= level.ordinal
 }

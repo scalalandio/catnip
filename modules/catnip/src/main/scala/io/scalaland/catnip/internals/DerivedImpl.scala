@@ -14,18 +14,19 @@ private[catnip] class DerivedImpl(config: Config)(val c: Context)(annottees: Seq
                   extends { ..$_ }
                   with ..$_ { $_ => ..$_ }""" =>
       withTraceLog("Derivation expanded") {
-        val derivation     = config.getString(typeClass.toString)
-        val derivationName = TermName(s"_derived_$typeClass")
+        val derivationRecipe = TermName(config.getString(typeClass.toString))
+        val derivationName   = TermName(s"_derived_${typeClass.toString.replace('.', '_')}")
         if (params.nonEmpty) {
-          val providerArgs = ctorParams.flatten.map(p => q"${p.name}: $typeClass[${p.tpt}]")
+          val derivationType = TypeName(q"""${typeClass.toTermName}[$name[..${params.map(_.name)}]]""".toString)
+          val providerArgs   = ctorParams.flatten.map(p => q"${p.name}: $typeClass[${p.tpt}]")
 
-          q"""implicit def ${derivationName}[..$params](implicit ..$providerArgs)
-                    : $typeClass[$name[..${params.map(_.name)}]] =
-                 $derivation""": DefDef
+          q"""implicit def ${derivationName}[..$params](implicit ..$providerArgs): $derivationType =
+                $derivationRecipe""": DefDef
         } else {
-          q"""implicit val ${derivationName}
-                    : $typeClass[$name] =
-                 $derivation""": ValDef
+          val derivationType = TypeName(q"""${typeClass.toTermName}[$name]""".toString)
+
+          q"""implicit val ${derivationName}: $derivationType =
+                $derivationRecipe""": ValDef
         }
       }
   }
@@ -48,19 +49,6 @@ private[catnip] class DerivedImpl(config: Config)(val c: Context)(annottees: Seq
     val typeClasses = c.prefix.tree match {
       case q"new $_(..$tcs)" => tcs.map(tc => TypeName(tc.toString))
     }
-
-    println(typeClasses)
-    println(config)
-    Stream
-      .iterate(getClass.getClassLoader.getResources("catnip-version.conf"))(identity)
-      .map { r =>
-        if (r.hasMoreElements) Some(r.nextElement()) else None
-      }
-      .takeWhile(_.isDefined)
-      .collect { case Some(x) => x }
-      .foreach(println)
-    println(ConfigFactory.parseURL(getClass.getClassLoader.getResources("catnip-version.conf").nextElement))
-    println(ConfigFactory.parseResources("catnip-version.conf"))
 
     annottees.toList match {
       case Expr(classDef: ClassDef) :: Expr(objectDef: ModuleDef) :: Nil =>
