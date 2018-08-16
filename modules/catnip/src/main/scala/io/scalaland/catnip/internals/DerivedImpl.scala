@@ -9,29 +9,24 @@ private[catnip] class DerivedImpl(config: Config)(val c: Context)(annottees: Seq
 
   import c.universe._
 
-  private def buildDerivation(classDef: ClassDef, typeClass: TypeName): ValOrDefDef = classDef match {
+  private type TypeClass = TypeName
+
+  private def buildDerivation(classDef: ClassDef, typeClass: TypeClass): ValOrDefDef = classDef match {
     case q"""$_ class $name[..${params: Seq[TypeDef] }] $_(...${ctorParams: Seq[Seq[ValDef]] })
                   extends { ..$_ }
                   with ..$_ { $_ => ..$_ }""" =>
       withTraceLog("Derivation expanded") {
-        val derivationRecipe = TermName(config.getString(typeClass.toString))
-        val derivationName   = TermName(s"_derived_${typeClass.toString.replace('.', '_')}")
-        if (params.nonEmpty) {
-          val derivationType = TypeName(q"""${typeClass.toTermName}[$name[..${params.map(_.name)}]]""".toString)
-          val providerArgs   = ctorParams.flatten.map(p => q"${p.name}: $typeClass[${p.tpt}]")
-
-          q"""implicit def ${derivationName}[..$params](implicit ..$providerArgs): $derivationType =
-                $derivationRecipe""": DefDef
-        } else {
-          val derivationType = TypeName(q"""${typeClass.toTermName}[$name]""".toString)
-
-          q"""implicit val ${derivationName}: $derivationType =
-                $derivationRecipe""": ValDef
-        }
+        val implName     = TermName(s"_derived_${typeClass.toString.replace('.', '_')}")
+        val tType        = if (params.nonEmpty) tq"$name[..${params.map(_.name)}]" else tq"$name"
+        val tcType       = c.parse(s"""$typeClass[$tType]""").tpe
+        val providerArgs = ctorParams.flatten.map(p => s"${p.name}: $typeClass[${p.tpt}]").map(c.parse)
+        val body         = c.parse(s"${config.getString(typeClass.toString)}[$tType]")
+        if (params.nonEmpty) q"""implicit def $implName[..$params](implicit ..$providerArgs): $tcType = $body""": DefDef
+        else q"""implicit val $implName: $tcType = $body""":                                                      ValDef
       }
   }
 
-  private def extendCompanion(objectDef: ModuleDef, classDef: ClassDef, typeClasses: Seq[TypeName]): ModuleDef =
+  private def extendCompanion(objectDef: ModuleDef, classDef: ClassDef, typeClasses: Seq[TypeClass]): ModuleDef =
     objectDef match {
       case q"$mods object $tname extends { ..$earlydefns } with ..$parents { $self => ..$body }" =>
         q"""$mods object $tname extends { ..$earlydefns } with ..$parents { $self =>
@@ -40,13 +35,13 @@ private[catnip] class DerivedImpl(config: Config)(val c: Context)(annottees: Seq
             }""": ModuleDef
     }
 
-  private def createCompanion(classDef: ClassDef, typeClasses: Seq[TypeName]): ModuleDef =
+  private def createCompanion(classDef: ClassDef, typeClasses: Seq[TypeClass]): ModuleDef =
     q"""object ${TermName(classDef.name.toString)} {
           ..${typeClasses.map(buildDerivation(classDef, _))}
         }""": ModuleDef
 
   def derive(): c.Expr[Any] = withDebugLog("Type class injection result") {
-    val typeClasses = c.prefix.tree match {
+    val typeClasses: Seq[TypeClass] = c.prefix.tree match {
       case q"new $_(..$tcs)" => tcs.map(tc => TypeName(tc.toString))
     }
 

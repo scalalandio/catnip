@@ -42,11 +42,8 @@ object Settings extends Dependencies {
       "-language:implicitConversions",
       "-language:postfixOps",
       // private options
-      // "-Yinduction-heuristics", // Typelevel Scala only
       "-Yno-adapted-args",
       "-Ypartial-unification",
-      // "-Ysysdef", "io.scalaland.Predef._", // Typelevel Scala only
-      // "-Ypredef", "_", // Typelevel Scala only
       // warnings
       "-Ywarn-dead-code",
       "-Ywarn-extra-implicit",
@@ -56,20 +53,16 @@ object Settings extends Dependencies {
       "-Ywarn-nullary-override",
       "-Ywarn-nullary-unit",
       "-Ywarn-numeric-widen",
-//      "-Ywarn-unused:implicits",
-//      "-Ywarn-unused:imports",
-//      "-Ywarn-unused:locals",
-//      "-Ywarn-unused:params",
-//      "-Ywarn-unused:patvars",
-//      "-Ywarn-unused:privates",
+      "-Ywarn-unused:implicits",
+      "-Ywarn-unused:locals",
+      "-Ywarn-unused:patvars",
+      "-Ywarn-unused:privates",
       "-Ywarn-value-discard",
       // advanced options
       "-Xcheckinit",
-//      "-Xfatal-warnings",
+      "-Xfatal-warnings",
       "-Xfuture",
-      // "-Xstrict-patmat-analysis", // Typelevel Scala only
       // linting
-//      "-Xlint",
       "-Xlint:adapted-args",
       "-Xlint:by-name-right-associative",
       "-Xlint:constant",
@@ -120,6 +113,7 @@ object Settings extends Dependencies {
 
     Compile / compile / wartremoverWarnings ++= Warts.allBut(
       Wart.Any,
+      Wart.AsInstanceOf,
       Wart.DefaultArguments,
       Wart.ExplicitImplicitTypes,
       Wart.ImplicitConversion,
@@ -127,7 +121,8 @@ object Settings extends Dependencies {
       Wart.Overloading,
       Wart.PublicInference,
       Wart.NonUnitStatements,
-      Wart.Nothing
+      Wart.Nothing,
+      Wart.ToString
     )
   )
 
