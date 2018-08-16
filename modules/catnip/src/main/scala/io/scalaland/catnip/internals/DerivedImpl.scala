@@ -11,16 +11,23 @@ private[catnip] class DerivedImpl(config: Config)(val c: Context)(annottees: Seq
 
   private type TypeClass = TypeName
 
-  private def buildDerivation(classDef: ClassDef, typeClass: TypeClass): ValOrDefDef = classDef match {
+  private def buildDerivation(classDef: ClassDef, typeClassName: TypeClass): ValOrDefDef = classDef match {
     case q"""$_ class $name[..${params: Seq[TypeDef] }] $_(...${ctorParams: Seq[Seq[ValDef]] })
                   extends { ..$_ }
                   with ..$_ { $_ => ..$_ }""" =>
       withTraceLog("Derivation expanded") {
-        val implName     = TermName(s"_derived_${typeClass.toString.replace('.', '_')}")
+        val fType = TypeName(
+          c.typecheck(c.parse(s"null: $typeClassName[Nothing]"))
+            .tpe
+            .dealias
+            .toString
+            .replaceFirst("""\[Nothing\]$""", "")
+        )
+        val implName     = TermName(s"_derived_${typeClassName.toString.replace('.', '_')}")
         val tType        = if (params.nonEmpty) tq"$name[..${params.map(_.name)}]" else tq"$name"
-        val tcType       = c.parse(s"""$typeClass[$tType]""").tpe
-        val providerArgs = ctorParams.flatten.map(p => s"${p.name}: $typeClass[${p.tpt}]").map(c.parse)
-        val body         = c.parse(s"${config.getString(typeClass.toString)}[$tType]")
+        val tcType       = c.parse(s"""$fType[$tType]""").tpe
+        val providerArgs = ctorParams.flatten.map(p => s"${p.name}: $fType[${p.tpt}]").map(c.parse)
+        val body         = c.parse(s"${config.getString(fType.toString)}[$tType]")
         if (params.nonEmpty) q"""implicit def $implName[..$params](implicit ..$providerArgs): $tcType = $body""": DefDef
         else q"""implicit val $implName: $tcType = $body""":                                                      ValDef
       }
