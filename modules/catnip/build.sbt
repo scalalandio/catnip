@@ -1,0 +1,1 @@
+addCompilerPlugin(Dependencies.macroParadise)
