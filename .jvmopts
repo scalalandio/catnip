@@ -1,0 +1,3 @@
+-Xms768m
+-Xmx2048m
+-Xss8m

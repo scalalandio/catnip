@@ -1,0 +1,24 @@
+language:       scala
+scala:
+              - 2.12.6
+jdk:
+              - openjdk8
+              - oraclejdk8
+dist:           trusty
+cache:
+              - "~/.ivy2"
+              - "~/.sbt"
+install:
+              - sudo apt-get update
+              - sudo apt-get install zsh
+              - sudo chmod +x scripts/*
+              - scripts/sbt update
+script:         scripts/run-all-tests.sh
+after_script:
+              - scripts/prepare-test-results-for-ci.sh
+              - find $HOME/.sbt -name "*.lock" | xargs rm
+              - find $HOME/.ivy2 -name "ivydata-*.properties" | xargs rm
+notifications:
+  email:
+    on_success: never
+    on_failure: change
