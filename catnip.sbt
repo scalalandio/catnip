@@ -28,6 +28,6 @@ lazy val catnipTests = project.from("catnip-tests")
 
 addCommandAlias("fullTest", ";test;scalastyle")
 
-addCommandAlias("fullCoverageTest", ";coverage;test;fun:test;it:test;coverageReport;coverageAggregate;scalastyle")
+addCommandAlias("fullCoverageTest", ";coverage;test;coverageReport;coverageAggregate;scalastyle")
 
 addCommandAlias("relock", ";unlock;reload;update;lock")
