@@ -1,5 +1,7 @@
 # catnip
 
+[![Build Status](https://travis-ci.org/scalalandio/catnip.svg?branch=master)](https://travis-ci.org/scalalandio/catnip)
+
 Static annotations for Kittens for people who don't like to semiautomatic
 derivations into companion objects themselves.
 
@@ -13,7 +15,7 @@ import cats.implicits._
 
 @Semi(cats.Eq, cats.Monoid, cats.Show) final case class Test(a: String)
 
-Test("a") === Test("b)  // false
+Test("a") === Test("b") // false
 Test("a") |+| Test("b") // Test("ab")
 Test("a").show          // "Test(a = a)"
 ```
