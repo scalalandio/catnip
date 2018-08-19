@@ -6,6 +6,7 @@ lazy val root = project.root
   .setName("catnip")
   .setDescription("Catnip build")
   .configureRoot
+  .noPublish
   .aggregate(catnipJVM, catnipJS, catnipTestsJVM, catnipTestsJS)
 
 lazy val catnip = crossProject(JVMPlatform, JSPlatform).crossType(CrossType.Pure).build.from("catnip")
@@ -13,11 +14,8 @@ lazy val catnip = crossProject(JVMPlatform, JSPlatform).crossType(CrossType.Pure
   .setDescription("Macro annotations for Kittens library")
   .setInitialImport("cats.implicits._")
   .configureModule
-  .settings(
-//    "org.scala-lang" % "scala-reflect" % scalaVersion.value % Provided,
-//    "org.scala-lang" % "scala-compiler" % scalaVersion.value % Provided,
-    addCompilerPlugin("org.scalamacros" % "paradise" % "2.1.1" cross sbt.CrossVersion.patch)
-  )
+  .publish
+  .settings(addCompilerPlugin("org.scalamacros" % "paradise" % "2.1.1" cross sbt.CrossVersion.patch))
 
 lazy val catnipJVM = catnip.jvm
 lazy val catnipJS  = catnip.js
@@ -29,6 +27,7 @@ lazy val catnipTests = crossProject(JVMPlatform, JSPlatform).crossType(CrossType
   .dependsOn(catnip)
   .configureModule
   .configureTests()
+  .noPublish
   .settings(libraryDependencies ++= Seq(
     "org.specs2" %%% "specs2-core"       % Dependencies.specs2Version % "test",
     "org.specs2" %%% "specs2-scalacheck" % Dependencies.specs2Version % "test",

@@ -92,11 +92,6 @@ object Settings extends Dependencies {
 
     Global / cancelable := true,
 
-//    Compile / fork := true,
-//    Compile / trapExit := false,
-//    Compile / connectInput := true,
-//    Compile / outputStrategy := Some(StdoutOutput),
-
     resolvers ++= commonResolvers,
 
     Compile / scalafmtOnCompile := true,
@@ -118,10 +113,67 @@ object Settings extends Dependencies {
     )
   ) ++ mainDeps
 
+  private val publishSettings = Seq(
+    organization := "io.scalaland",
+    homepage := Some(url("https://scalaland.io")),
+    licenses := Seq("Apache-2.0" -> url("http://www.apache.org/licenses/LICENSE-2.0")),
+    scmInfo := Some(
+      ScmInfo(url("https://github.com/scalalandio/catnip"), "scm:git:git@github.com:scalalandio/catnip.git")
+    ),
+    publishTo := {
+      val nexus = "https://oss.sonatype.org/"
+      if (isSnapshot.value)
+        Some("snapshots" at nexus + "content/repositories/snapshots")
+      else
+        Some("releases" at nexus + "service/local/staging/deploy/maven2")
+    },
+    publishMavenStyle := true,
+    publishArtifact in Test := false,
+    pomIncludeRepository := { _ =>
+      false
+    },
+    pomExtra := (
+      <developers>
+        <developer>
+          <id>krzemin</id>
+          <name>Piotr Krzemiński</name>
+          <url>http://github.com/krzemin</url>
+        </developer>
+        <developer>
+          <id>MateuszKubuszok</id>
+          <name>Mateusz Kubuszok</name>
+          <url>http://github.com/MateuszKubuszok</url>
+        </developer>
+      </developers>
+      )
+  )
+
+  private val noPublishSettings =
+    Seq(skip in publish := true, publishArtifact := false)
+
   implicit class RunConfigurator(project: CrossProject) {
 
     def configureRun(main: String): CrossProject = project
       .settings(Compile / run / mainClass := Some(main))
+  }
+
+  implicit class PublishRootConfigurator(project: Project) {
+
+    def publish: Project = project
+      .settings(publishSettings)
+
+    def noPublish: Project = project
+      .settings(noPublishSettings)
+  }
+
+
+  implicit class PublishConfigurator(project: CrossProject) {
+
+    def publish: CrossProject = project
+      .settings(publishSettings)
+
+    def noPublish: CrossProject = project
+      .settings(noPublishSettings)
   }
 
   abstract class TestConfigurator(project: CrossProject, config: Configuration) {
