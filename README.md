@@ -1,13 +1,28 @@
 # catnip
 
 [![Build Status](https://travis-ci.org/scalalandio/catnip.svg?branch=master)](https://travis-ci.org/scalalandio/catnip)
+[![Maven Central](https://img.shields.io/maven-central/v/io.scalaland/catnip_2.12.svg)](http://search.maven.org/#search%7Cga%7C1%7Ccatnip)
+[![License](http://img.shields.io/:license-Apache%202-green.svg)](http://www.apache.org/licenses/LICENSE-2.0.txt)
 
 Static annotations for Kittens for people who don't like to write
 semiautomatic derivations into companion objects themselves.
 
 ## Usage
 
-> Not published anywhere yet.
+Add to your sbt
+
+```scala
+libraryDependencies += "io.scalaland" %% "catnip" % catnipVersion // see Maven badge
+```
+
+or, if you use Scala.js
+
+```scala
+libraryDependencies += "io.scalaland" %%% "catnip" % catnipVersion // see Maven badge
+```
+
+From now on you can add implicit kitten-generated type classes to you case classes
+with a simple macro-annotation:
 
 ```scala
 import catnip._
