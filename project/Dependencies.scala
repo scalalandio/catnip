@@ -1,12 +1,16 @@
 import sbt._
-
+import sbt.Keys.libraryDependencies
 import Dependencies._
+import sbtcrossproject.CrossProject
+import sbtcrossproject.CrossPlugin.autoImport._
+import org.portablescala.sbtplatformdeps.PlatformDepsPlugin.autoImport._
 
 object Dependencies {
 
   // scala version
-  val scalaOrganization = "org.scala-lang" // "org.typelevel"
-  val scalaVersion      = "2.12.6" // "2.12.4-bin-typelevel-4"
+  val scalaOrganization  = "org.scala-lang" // "org.typelevel"
+  val scalaVersion       = "2.12.6" // "2.12.4-bin-typelevel-4"
+  val crossScalaVersions = Seq("2.12.6")
 
   // build tools version
   val scalaFmtVersion = "1.5.1"
@@ -25,24 +29,17 @@ object Dependencies {
     Resolver typesafeRepo "releases"
   )
 
-  // functional libraries
-  val cats               = "org.typelevel"                %% "cats-core"                 % catsVersion
-  val kittens            = "org.typelevel"                %% "kittens"                   % "1.1.1"
-  // config
-  val scalaConfig        = "com.typesafe"                 %  "config"                    % "1.3.3"
-  // testing
-  val spec2Core          = "org.specs2"                   %% "specs2-core"               % specs2Version
-  val spec2Scalacheck    = "org.specs2"                   %% "specs2-scalacheck"         % specs2Version
-  // compiler plugins
-  val macroParadise      = "org.scalamacros"              %  "paradise"                  % "2.1.1" cross (
-    sbt.CrossVersion.patch
-  )
+  val alleyCats          = libraryDependencies += "org.typelevel"   %%% "alleycats-core"    % catsVersion
+  val cats               = libraryDependencies += "org.typelevel"   %%% "cats-core"         % catsVersion
+  val kittens            = libraryDependencies += "org.typelevel"   %%% "kittens"           % "1.1.1"
+  val shapeless          = libraryDependencies += "com.chuusai"     %%% "shapeless"         % "2.3.3"
 }
 
 trait Dependencies {
 
   val scalaOrganizationUsed = scalaOrganization
   val scalaVersionUsed = scalaVersion
+  val crossScalaVersionsUsed = crossScalaVersions
 
   val scalaFmtVersionUsed = scalaFmtVersion
 
@@ -51,33 +48,31 @@ trait Dependencies {
   // resolvers
   val commonResolvers = resolvers
 
-  val mainDeps = Seq(cats, kittens, scalaConfig)
-
-  val testDeps = Seq(spec2Core, spec2Scalacheck)
+  val mainDeps = Seq(alleyCats, cats, kittens, shapeless)
 
   implicit class ProjectRoot(project: Project) {
 
     def root: Project = project in file(".")
   }
 
-  implicit class ProjectFrom(project: Project) {
+  implicit class ProjectFrom(project: CrossProject) {
 
     private val commonDir = "modules"
 
-    def from(dir: String): Project = project in file(s"$commonDir/$dir")
+    def from(dir: String): CrossProject = project in file(s"$commonDir/$dir")
   }
 
-  implicit class DependsOnProject(project: Project) {
+  implicit class DependsOnProject(project: CrossProject) {
 
-    private val testConfigurations = Set("test", "fun", "it")
-    private def findCompileAndTestConfigs(p: Project) =
-      (p.configurations.map(_.name).toSet intersect testConfigurations) + "compile"
+    private val testConfigurations = Set("test")
+    private def findCompileAndTestConfigs(p: CrossProject) =
+      (p.projects(JVMPlatform).configurations.map(_.name).toSet intersect testConfigurations) + "compile"
 
     private val thisProjectsConfigs = findCompileAndTestConfigs(project)
-    private def generateDepsForProject(p: Project) =
+    private def generateDepsForProject(p: CrossProject) =
       p % (thisProjectsConfigs intersect findCompileAndTestConfigs(p) map (c => s"$c->$c") mkString ";")
 
-    def compileAndTestDependsOn(projects: Project*): Project =
+    def compileAndTestDependsOn(projects: CrossProject*): CrossProject =
       project dependsOn (projects.map(generateDepsForProject): _*)
   }
 }
