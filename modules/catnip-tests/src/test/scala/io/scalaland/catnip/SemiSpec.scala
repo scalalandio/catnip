@@ -9,11 +9,11 @@ class SemiSpec extends Specification {
 
     "handle non-parametric classes" in {
       // given
-      @Semi(cats.Eq) final case class Test(a: String, b: String)
+      @Semi(cats.Order, cats.Show, cats.Monoid) final case class NonParam(a: String, b: String)
 
       // when
-      val result1 = cats.Eq[Test].eqv(Test("a", "b"), Test("a", "b"))
-      val result2 = cats.Eq[Test].eqv(Test("a", "b"), Test("c", "d"))
+      val result1 = cats.Eq[NonParam].eqv(NonParam("a", "b"), NonParam("a", "b"))
+      val result2 = cats.Eq[NonParam].eqv(NonParam("a", "b"), NonParam("c", "d"))
 
       // then
       result1 must beTrue
@@ -22,11 +22,14 @@ class SemiSpec extends Specification {
 
     "handle parametric classes" in {
       // given
-      @Semi(cats.Eq) final case class Test[A](a: A)
+      // cats.Show is not supported until https://github.com/typelevel/kittens/issues/102 is resolved
+      @Semi(
+        cats.Order, cats.Functor, cats.Foldable, cats.MonoidK, alleycats.Empty
+      ) final case class Param[A](a: List[A])
 
       // when
-      val result1 = cats.Eq[Test[String]].eqv(Test("a"), Test("a"))
-      val result2 = cats.Eq[Test[String]].eqv(Test("a"), Test("b"))
+      val result1 = cats.Eq[Param[String]].eqv(Param(List("a")), Param(List("a")))
+      val result2 = cats.Eq[Param[String]].eqv(Param(List("a")), Param(List("b")))
 
       // then
       result1 must beTrue
@@ -35,11 +38,11 @@ class SemiSpec extends Specification {
 
     "handle type aliases" in {
       // given
-      @Semi(Aliased.X) final case class Test(a: String, b: String)
+      @Semi(Aliased.X) final case class Aliases(a: String, b: String)
 
       // when
-      val result1 = cats.Eq[Test].eqv(Test("a", "b"), Test("a", "b"))
-      val result2 = cats.Eq[Test].eqv(Test("a", "b"), Test("c", "d"))
+      val result1 = cats.Eq[Aliases].eqv(Aliases("a", "b"), Aliases("a", "b"))
+      val result2 = cats.Eq[Aliases].eqv(Aliases("a", "b"), Aliases("c", "d"))
 
       // then
       result1 must beTrue
@@ -82,11 +85,11 @@ class SemiSpec extends Specification {
 
     "generate for cats.Eq" in {
       // given
-      @Semi(cats.Eq) final case class Test(a: String)
+      @Semi(cats.Eq) final case class TestEq(a: String)
 
       // when
-      val result1 = cats.Eq[Test].eqv(Test("a"), Test("a"))
-      val result2 = cats.Eq[Test].eqv(Test("a"), Test("b"))
+      val result1 = cats.Eq[TestEq].eqv(TestEq("a"), TestEq("a"))
+      val result2 = cats.Eq[TestEq].eqv(TestEq("a"), TestEq("b"))
 
       // then
       result1 must beTrue
@@ -95,11 +98,11 @@ class SemiSpec extends Specification {
 
     "generate for cats.PartialOrder" in {
       // given
-      @Semi(cats.PartialOrder) final case class Test(a: String)
+      @Semi(cats.PartialOrder) final case class TestPO(a: String)
 
       // when
-      val result1 = Test("a") <= Test("a")
-      val result2 = Test("a") >= Test("b")
+      val result1 = TestPO("a") <= TestPO("a")
+      val result2 = TestPO("a") >= TestPO("b")
 
       // then
       result1 must beTrue
@@ -108,24 +111,24 @@ class SemiSpec extends Specification {
 
     "generate for cats.Order" in {
       // given
-      @Semi(cats.Order) final case class Test(a: String)
+      @Semi(cats.Order) final case class TestO(a: String)
 
       // when
-      val result1 = Test("a") min Test("a")
-      val result2 = Test("a") max Test("b")
+      val result1 = TestO("a") min TestO("a")
+      val result2 = TestO("a") max TestO("b")
 
       // then
-      result1 must beEqualTo(Test("a"))
-      result2 must beEqualTo(Test("b"))
+      result1 must beEqualTo(TestO("a"))
+      result2 must beEqualTo(TestO("b"))
     }
 
     "generate for cats.Hash" in {
       // given
-      @Semi(cats.Hash) final case class Test(a: String)
+      @Semi(cats.Hash) final case class TestHash(a: String)
 
       // when
-      val result1 = cats.Hash.hash(Test("a"))
-      val result2 = cats.Hash.hash(Test("b"))
+      val result1 = cats.Hash.hash(TestHash("a"))
+      val result2 = cats.Hash.hash(TestHash("b"))
 
       // then
       result1 must not(beEqualTo(result2))
@@ -133,26 +136,26 @@ class SemiSpec extends Specification {
 
     "generate for cats.Functor" in {
       // given
-      @Semi(cats.Functor) final case class Test[A](a: A)
+      @Semi(cats.Functor) final case class TestFunctor[A](a: A)
 
       // when
-      val result1 = Test("1").map(_.toInt)
-      val result2 = Test("2").map(_.toInt)
+      val result1 = TestFunctor("1").map(_.toInt)
+      val result2 = TestFunctor("2").map(_.toInt)
 
       // then
-      result1 must beEqualTo(Test(1))
-      result2 must beEqualTo(Test(2))
+      result1 must beEqualTo(TestFunctor(1))
+      result2 must beEqualTo(TestFunctor(2))
     }
 
     "generate for cats.Foldable" in {
       // given
-      @Semi(cats.Foldable) final case class Test[A](a: A)
+      @Semi(cats.Foldable) final case class TestFoldable[A](a: A)
 
       // when
-      val result1 = Test("1").foldLeft(0) { (a, i) =>
+      val result1 = TestFoldable("1").foldLeft(0) { (a, i) =>
         a + i.toInt
       }
-      val result2 = Test("2").foldLeft(0) { (a, i) =>
+      val result2 = TestFoldable("2").foldLeft(0) { (a, i) =>
         a + i.toInt
       }
 
@@ -163,24 +166,24 @@ class SemiSpec extends Specification {
 
     "generate for cats.Show" in {
       // given
-      @Semi(cats.Show) final case class Test(a: String)
+      @Semi(cats.Show) final case class TestShow(a: String)
 
       // when
-      val result1 = Test("a").show
-      val result2 = Test("b").show
+      val result1 = TestShow("a").show
+      val result2 = TestShow("b").show
 
       // then
-      result1 must beEqualTo("Test(a = a)")
-      result2 must beEqualTo("Test(a = b)")
+      result1 must beEqualTo("TestShow(a = a)")
+      result2 must beEqualTo("TestShow(a = b)")
     }
 
     "generate for cats.Monoid" in {
       // given
-      @Semi(cats.Monoid, cats.Eq) final case class Test(a: String)
+      @Semi(cats.Monoid, cats.Eq) final case class TestMonoid(a: String)
 
       // when
-      val result1 = Test("").isEmpty
-      val result2 = Test("b").isEmpty
+      val result1 = TestMonoid("").isEmpty
+      val result2 = TestMonoid("b").isEmpty
 
       // then
       result1 must beTrue
@@ -189,12 +192,12 @@ class SemiSpec extends Specification {
 
     "generate for cats.MonoidK" in {
       // given
-      @Semi(cats.MonoidK, cats.Eq) final case class Test[A](a: List[A])
+      @Semi(cats.MonoidK, cats.Eq) final case class TestMonoidK[A](a: List[A])
 
       // when
-      implicit val a = cats.MonoidK[Test].algebra[String]
-      val result1    = Test[String](List()).isEmpty
-      val result2    = Test[String](List("")).isEmpty
+      implicit val a = cats.MonoidK[TestMonoidK].algebra[String]
+      val result1    = TestMonoidK[String](List()).isEmpty
+      val result2    = TestMonoidK[String](List("")).isEmpty
 
       // then
       result1 must beTrue
@@ -203,40 +206,40 @@ class SemiSpec extends Specification {
 
     "generate for cats.Semigroup" in {
       // given
-      @Semi(cats.Semigroup) final case class Test(a: String)
+      @Semi(cats.Semigroup) final case class TestSemi(a: String)
 
       // when
-      val result1 = Test("a") |+| Test("a")
-      val result2 = Test("b") |+| Test("a")
+      val result1 = TestSemi("a") |+| TestSemi("a")
+      val result2 = TestSemi("b") |+| TestSemi("a")
 
       // then
-      result1 must beEqualTo(Test("aa"))
-      result2 must beEqualTo(Test("ba"))
+      result1 must beEqualTo(TestSemi("aa"))
+      result2 must beEqualTo(TestSemi("ba"))
     }
 
     "generate for cats.SemigroupK" in {
       // given
-      @Semi(cats.SemigroupK, cats.Eq) final case class Test[A](a: List[A])
+      @Semi(cats.SemigroupK, cats.Eq) final case class TestSemiK[A](a: List[A])
 
       // when
-      implicit val a = cats.SemigroupK[Test].algebra[String]
-      val result1    = Test[String](List("a")) |+| Test[String](List("a"))
-      val result2    = Test[String](List("b")) |+| Test[String](List("a"))
+      implicit val a = cats.SemigroupK[TestSemiK].algebra[String]
+      val result1    = TestSemiK[String](List("a")) |+| TestSemiK[String](List("a"))
+      val result2    = TestSemiK[String](List("b")) |+| TestSemiK[String](List("a"))
 
       // then
-      result1 must beEqualTo(Test(List("a", "a")))
-      result2 must beEqualTo(Test(List("b", "a")))
+      result1 must beEqualTo(TestSemiK(List("a", "a")))
+      result2 must beEqualTo(TestSemiK(List("b", "a")))
     }
 
     "generate for alleycats.Empty" in {
       // given
-      @Semi(alleycats.Empty) final case class Test(a: String)
+      @Semi(alleycats.Empty) final case class TestEmpty[A](a: A)
 
       // when
-      val result = alleycats.Empty[Test].empty
+      val result = alleycats.Empty[TestEmpty[String]].empty
 
       // then
-      result must beEqualTo(Test(""))
+      result must beEqualTo(TestEmpty(""))
     }
   }
 }
