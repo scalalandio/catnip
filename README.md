@@ -13,12 +13,14 @@ Add to your sbt
 
 ```scala
 libraryDependencies += "io.scalaland" %% "catnip" % catnipVersion // see Maven badge
+addCompilerPlugin("org.scalamacros" % "paradise" % "2.1.1" cross sbt.CrossVersion.patch)
 ```
 
 or, if you use Scala.js
 
 ```scala
 libraryDependencies += "io.scalaland" %%% "catnip" % catnipVersion // see Maven badge
+addCompilerPlugin("org.scalamacros" % "paradise" % "2.1.1" cross sbt.CrossVersion.patch)
 ```
 
 From now on you can add implicit kitten-generated type classes to you case classes
