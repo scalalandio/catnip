@@ -132,6 +132,19 @@ class CachedSpec extends Specification {
       result1 must not(beEqualTo(result2))
     }
 
+    "generate for cats.Functor" in {
+      // given
+      @Cached(cats.Functor) final case class Test[A](a: A)
+
+      // when
+      val result1 = Test("1").map(_.toInt)
+      val result2 = Test("2").map(_.toInt)
+
+      // then
+      result1 must beEqualTo(Test(1))
+      result2 must beEqualTo(Test(2))
+    }
+
     "generate for cats.Show" in {
       // given
       @Cached(cats.Show) final case class Test(a: String)
@@ -145,6 +158,20 @@ class CachedSpec extends Specification {
       result2 must beEqualTo("Test(a = b)")
     }
 
+    "generate for cats.MonoidK" in {
+      // given
+      @Semi(cats.MonoidK, cats.Eq) final case class Test[A](a: List[A])
+
+      // when
+      implicit val a = cats.MonoidK[Test].algebra[String]
+      val result1    = Test[String](List()).isEmpty
+      val result2    = Test[String](List("")).isEmpty
+
+      // then
+      result1 must beTrue
+      result2 must beFalse
+    }
+
     "generate for cats.Semigroup" in {
       // given
       @Cached(cats.Semigroup) final case class Test(a: String)
@@ -156,6 +183,20 @@ class CachedSpec extends Specification {
       // then
       result1 must beEqualTo(Test("aa"))
       result2 must beEqualTo(Test("ba"))
+    }
+
+    "generate for cats.SemigroupK" in {
+      // given
+      @Cached(cats.SemigroupK, cats.Eq) final case class Test[A](a: List[A])
+
+      // when
+      implicit val a = cats.SemigroupK[Test].algebra[String]
+      val result1    = Test[String](List("a")) |+| Test[String](List("a"))
+      val result2    = Test[String](List("b")) |+| Test[String](List("a"))
+
+      // then
+      result1 must beEqualTo(Test(List("a", "a")))
+      result2 must beEqualTo(Test(List("b", "a")))
     }
   }
 }
