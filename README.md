@@ -2,8 +2,8 @@
 
 [![Build Status](https://travis-ci.org/scalalandio/catnip.svg?branch=master)](https://travis-ci.org/scalalandio/catnip)
 
-Static annotations for Kittens for people who don't like to semiautomatic
-derivations into companion objects themselves.
+Static annotations for Kittens for people who don't like to write
+semiautomatic derivations into companion objects themselves.
 
 ## Usage
 
@@ -23,9 +23,11 @@ Test("a").show          // "Test(a = a)"
 ## Implemented
 
  * `@Semi`: `cats.Eq`, `cats.PartialOrder`, `cats.Order`, `cats.Hash`,
-   `cats.Show`,  `cats.Monoid`, `cats.Semigroup`, `alleycats.Empty`,
+   `cats.Functor`, `cats.Foldable`, `cats.Show`,  `cats.Monoid`, `cats.MonoidK`,
+   `cats.Semigroup`, `cats.SemigroupK`, `alleycats.Empty`,
  * `@Cached`: `cats.Eq`, `cats.PartialOrder`, `cats.Order`, `cats.Hash`,
-   `cats.Show`, `cats.Semigroup`.
+   `cats.Functor`, `cats.Show`, `cats.MonoidK`, `cats.Semigroup`,
+   `cats.SemigroupK`.
 
 ## Limitations
 
@@ -41,5 +43,3 @@ Test("a").show          // "Test(a = a)"
    @Semi(X) final case class Test(a: String)
    // scala.reflect.macros.TypecheckException: not found: type X
    ```
- * type classes taking type constructor as a parameter are not supported
-   (`cats.Functor`, `cats.Foldable`, `cats.MonoidK`, `cats.SemigroupK`).
