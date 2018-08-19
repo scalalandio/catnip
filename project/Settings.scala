@@ -54,7 +54,6 @@ object Settings extends Dependencies {
       "-Ywarn-nullary-unit",
       "-Ywarn-numeric-widen",
       "-Ywarn-unused:implicits",
-      "-Ywarn-unused:locals",
       "-Ywarn-unused:patvars",
       "-Ywarn-unused:privates",
       "-Ywarn-value-discard",
@@ -78,7 +77,6 @@ object Settings extends Dependencies {
       "-Xlint:poly-implicit-overload",
       "-Xlint:private-shadow",
       "-Xlint:stars-align",
-      // "-Xlint:strict-unsealed-patmat", // Typelevel Scala only
       "-Xlint:type-parameter-shadow",
       "-Xlint:unsound-match"
     ),

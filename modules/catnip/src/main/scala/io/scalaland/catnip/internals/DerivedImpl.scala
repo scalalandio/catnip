@@ -17,20 +17,14 @@ private[catnip] class DerivedImpl(config: Config)(val c: Context)(annottees: Seq
                   with ..$_ { $_ => ..$_ }""" =>
       withTraceLog("Derivation expanded") {
         // TODO: there must be a better way to dealias F[_] type
-        val fType = TypeName(
-          c.typecheck(c.parse(s"null: $typeClassName[Nothing]"))
-            .tpe
-            .dealias
-            .toString
-            .replaceFirst("""\[Nothing\]$""", "")
-        )
+        val fType        = c.typecheck(c.parse(s"null: $typeClassName[Nothing]")).tpe.dealias.typeConstructor
+        val needKind     = scala.util.Try(c.typecheck(c.parse(s"null: $fType[List]"))).isSuccess
         val implName     = TermName(s"_derived_${fType.toString.replace('.', '_')}")
-        val aType        = if (params.nonEmpty) tq"$name[..${params.map(_.name)}]" else tq"$name"
-        val faType       = c.parse(s"$fType[$aType]").tpe
+        lazy val aType   = if (params.nonEmpty) tq"$name[..${params.map(_.name)}]" else tq"$name"
         val providerArgs = ctorParams.flatten.map(p => s"${p.name}: $fType[${p.tpt}]").map(c.parse)
-        val body         = c.parse(s"${config.getString(fType.toString)}[$aType]")
-        if (params.nonEmpty) q"""implicit def $implName[..$params](implicit ..$providerArgs): $faType = $body""": DefDef
-        else q"""implicit val $implName: $faType = $body""":                                                      ValDef
+        val body         = c.parse(s"${config.getString(fType.toString)}[${if (needKind) name else aType}]")
+        if (params.isEmpty || needKind) q"""implicit val $implName = $body""":            ValDef
+        else q"""implicit def $implName[..$params](implicit ..$providerArgs)  = $body""": DefDef
       }
   }
 
