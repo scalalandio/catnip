@@ -2,25 +2,21 @@ import sbt._
 import sbt.Keys._
 import sbt.TestFrameworks.Specs2
 import sbt.Tests.Argument
-import com.lightbend.sbt.SbtAspectj._
-import com.lightbend.sbt.SbtAspectj.autoImport._
 import com.typesafe.sbt._
 import com.lucidchart.sbt.scalafmt.ScalafmtCorePlugin.autoImport._
 import org.scalastyle.sbt.ScalastylePlugin.autoImport._
-import sbtassembly.AssemblyPlugin.autoImport._
+import sbtcrossproject.CrossProject
 import scoverage._
-import spray.revolver.RevolverPlugin.autoImport._
 import wartremover._
 
 object Settings extends Dependencies {
 
-  val FunctionalTest: Configuration = config("fun") extend Test describedAs "Runs only functional tests"
-
   private val commonSettings = Seq(
     organization := "io.scalaland",
 
-    scalaOrganization := scalaOrganizationUsed,
-    scalaVersion      := scalaVersionUsed,
+    scalaOrganization  := scalaOrganizationUsed,
+    scalaVersion       := scalaVersionUsed,
+    crossScalaVersions := crossScalaVersionsUsed,
 
     scalafmtVersion := scalaFmtVersionUsed
   )
@@ -96,14 +92,12 @@ object Settings extends Dependencies {
 
     Global / cancelable := true,
 
-    Compile / fork := true,
-    Compile / trapExit := false,
-    Compile / connectInput := true,
-    Compile / outputStrategy := Some(StdoutOutput),
+//    Compile / fork := true,
+//    Compile / trapExit := false,
+//    Compile / connectInput := true,
+//    Compile / outputStrategy := Some(StdoutOutput),
 
     resolvers ++= commonResolvers,
-
-    libraryDependencies ++= mainDeps,
 
     Compile / scalafmtOnCompile := true,
 
@@ -122,38 +116,17 @@ object Settings extends Dependencies {
       Wart.Nothing,
       Wart.ToString
     )
-  )
+  ) ++ mainDeps
 
-  implicit class RunConfigurator(project: Project) {
+  implicit class RunConfigurator(project: CrossProject) {
 
-    def configureRun(main: String): Project = project
-      .settings(inTask(assembly)(Seq(
-        assemblyJarName := s"${name.value}.jar",
-        assemblyMergeStrategy := {
-          case PathList("scala", _*)                       => MergeStrategy.first // workaround for Typelevel Scala
-          case PathList("compiler.properties")             => MergeStrategy.first // workaround for Typelevel Scala
-          case PathList("interactive.properties")          => MergeStrategy.first // workaround for Typelevel Scala
-          case PathList("library.properties")              => MergeStrategy.first // workaround for Typelevel Scala
-          case PathList("reflect.properties")              => MergeStrategy.first // workaround for Typelevel Scala
-          case PathList("repl.properties")                 => MergeStrategy.first // workaround for Typelevel Scala
-          case PathList("repl-jline.properties")           => MergeStrategy.first // workaround for Typelevel Scala
-          case PathList("scala-buildcharacter.properties") => MergeStrategy.first // workaround for Typelevel Scala
-          case PathList("scaladoc.properties")             => MergeStrategy.first // workaround for Typelevel Scala
-          case strategy                                    => MergeStrategy.defaultMergeStrategy(strategy)
-        },
-        mainClass := Some(main)
-      )))
+    def configureRun(main: String): CrossProject = project
       .settings(Compile / run / mainClass := Some(main))
-      .settings(aspectjSettings)
-      .settings(Aspectj / aspectjVersion := aspectjVersionUsed)
-      .settings(reStart / javaOptions ++= (Aspectj / aspectjWeaverOptions).value)
   }
 
-  abstract class TestConfigurator(project: Project, config: Configuration) {
+  abstract class TestConfigurator(project: CrossProject, config: Configuration) {
 
-    protected def configure(requiresFork: Boolean): Project = project
-      .configs(config)
-      .settings(inConfig(config)(Defaults.testSettings): _*)
+    protected def configure(requiresFork: Boolean): CrossProject = project
       .settings(inConfig(config)(scalafmtSettings))
       .settings(inConfig(config)(Seq(
         scalafmtOnCompile := true,
@@ -162,17 +135,16 @@ object Settings extends Dependencies {
         fork := requiresFork,
         testFrameworks := Seq(Specs2)
       )))
-      .settings(libraryDependencies ++= testDeps map (_ % config.name))
       .enablePlugins(ScoverageSbtPlugin)
 
-    protected def configureSequential(requiresFork: Boolean): Project = configure(requiresFork)
+    protected def configureSequential(requiresFork: Boolean): CrossProject = configure(requiresFork)
       .settings(inConfig(config)(Seq(
         testOptions += Argument(Specs2, "sequential"),
         parallelExecution  := false
       )))
   }
 
-  implicit class DataConfigurator(project: Project) {
+  implicit class RootDataConfigurator(project: Project) {
 
     def setName(newName: String): Project = project.settings(name := newName)
 
@@ -182,34 +154,30 @@ object Settings extends Dependencies {
       project.settings(initialCommands := s"import io.scalaland.catnip._, $newInitialCommand")
   }
 
+  implicit class DataConfigurator(project: CrossProject) {
+
+    def setName(newName: String): CrossProject = project.settings(name := newName)
+
+    def setDescription(newDescription: String): CrossProject = project.settings(description := newDescription)
+
+    def setInitialImport(newInitialCommand: String): CrossProject =
+      project.settings(initialCommands := s"import io.scalaland.catnip._, $newInitialCommand")
+  }
+
   implicit class RootConfigurator(project: Project) {
 
     def configureRoot: Project = project.settings(rootSettings: _*)
   }
 
-  implicit class ModuleConfigurator(project: Project) {
+  implicit class ModuleConfigurator(project: CrossProject) {
 
-    def configureModule: Project = project.settings(modulesSettings: _*).enablePlugins(GitVersioning)
+    def configureModule: CrossProject = project.settings(modulesSettings: _*).enablePlugins(GitVersioning)
   }
 
-  implicit class UnitTestConfigurator(project: Project) extends TestConfigurator(project, Test) {
+  implicit class UnitTestConfigurator(project: CrossProject) extends TestConfigurator(project, Test) {
 
-    def configureTests(requiresFork: Boolean = false): Project = configure(requiresFork)
+    def configureTests(requiresFork: Boolean = false): CrossProject = configure(requiresFork)
 
-    def configureTestsSequential(requiresFork: Boolean = false): Project = configureSequential(requiresFork)
-  }
-
-  implicit class FunctionalTestConfigurator(project: Project) extends TestConfigurator(project, FunctionalTest) {
-
-    def configureFunctionalTests(requiresFork: Boolean = false): Project = configure(requiresFork)
-
-    def configureFunctionalTestsSequential(requiresFork: Boolean = false): Project = configureSequential(requiresFork)
-  }
-
-  implicit class IntegrationTestConfigurator(project: Project) extends TestConfigurator(project, IntegrationTest) {
-
-    def configureIntegrationTests(requiresFork: Boolean = false): Project = configure(requiresFork)
-
-    def configureIntegrationTestsSequential(requiresFork: Boolean = false): Project = configureSequential(requiresFork)
+    def configureTestsSequential(requiresFork: Boolean = false): CrossProject = configureSequential(requiresFork)
   }
 }
