@@ -1,11 +1,9 @@
 package io.scalaland.catnip.internals
 
-import com.typesafe.config.{ Config, ConfigFactory }
-
 import scala.language.experimental.macros
 import scala.reflect.macros.whitebox.Context
 
-private[catnip] class DerivedImpl(config: Config)(val c: Context)(annottees: Seq[Any]) extends Loggers {
+private[catnip] class DerivedImpl(config: Map[String, String])(val c: Context)(annottees: Seq[Any]) extends Loggers {
 
   import c.universe._
 
@@ -22,7 +20,7 @@ private[catnip] class DerivedImpl(config: Config)(val c: Context)(annottees: Seq
         val implName     = TermName(s"_derived_${fType.toString.replace('.', '_')}")
         lazy val aType   = if (params.nonEmpty) tq"$name[..${params.map(_.name)}]" else tq"$name"
         val providerArgs = ctorParams.flatten.map(p => s"${p.name}: $fType[${p.tpt}]").map(c.parse)
-        val body         = c.parse(s"${config.getString(fType.toString)}[${if (needKind) name else aType}]")
+        val body         = c.parse(s"${config(fType.toString)}[${if (needKind) name else aType}]")
         if (params.isEmpty || needKind) q"""implicit val $implName = $body""":            ValDef
         else q"""implicit def $implName[..$params](implicit ..$providerArgs)  = $body""": DefDef
       }
@@ -71,9 +69,20 @@ private[catnip] object DerivedImpl {
   }
 
   private def loadConfig(name: String) =
-    ConfigFactory.parseURL(getClass.getClassLoader.getResources(name).nextElement)
+    scala.io.Source
+      .fromURL(getClass.getClassLoader.getResources(name).nextElement)
+      .getLines
+      .map(_.trim)
+      .filterNot(_ startsWith """////""")
+      .filterNot(_ startsWith """#""")
+      .filterNot(_.isEmpty)
+      .map { s =>
+        val kv = s.split('=')
+        kv(0) -> kv(1)
+      }
+      .toMap
 
-  private val mappings: Map[Type, Config] = Map(
+  private val mappings: Map[Type, Map[String, String]] = Map(
     Type.Semi -> loadConfig("derive.semi.conf"),
     Type.Cached -> loadConfig("derive.cached.conf")
   )
