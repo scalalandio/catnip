@@ -27,7 +27,7 @@ From now on you can add implicit kitten-generated type classes to you case class
 with a simple macro-annotation:
 
 ```scala
-import catnip._
+import io.scalaland.catnip._
 import cats.implicits._
 
 @Semi(cats.Eq, cats.Monoid, cats.Show) final case class Test(a: String)
@@ -35,6 +35,15 @@ import cats.implicits._
 Test("a") === Test("b") // false
 Test("a") |+| Test("b") // Test("ab")
 Test("a").show          // "Test(a = a)"
+```
+
+You can also test it with ammonite like:
+
+```scala
+import $ivy.`io.scalaland::catnip:0.1`, io.scalaland.catnip._, cats.implicits._
+interp.load.plugin.ivy("org.scalamacros" % "paradise_2.12.4" % "2.1.1")
+
+@Semi(cats.Eq, cats.Monoid, cats.Functor) final case class Test[A](a: A)
 ```
 
 ## Implemented
