@@ -22,8 +22,7 @@ class CachedSpec extends Specification {
 
     "handle parametric classes" in {
       // given
-      // cats.Show is not supported until https://github.com/typelevel/kittens/issues/102 is resolved
-      @Cached(cats.Order, cats.Functor, cats.MonoidK) final case class Param[A](a: List[A])
+      @Cached(cats.Order, cats.Show, cats.Functor, cats.MonoidK) final case class Param[A](a: List[A])
 
       // when
       val result1 = cats.Eq[Param[String]].eqv(Param(List("a")), Param(List("a")))

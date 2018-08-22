@@ -3,24 +3,31 @@ package io.scalaland.catnip.internals
 import scala.language.experimental.macros
 import scala.reflect.macros.whitebox.Context
 
-private[catnip] class DerivedImpl(config: Map[String, String])(val c: Context)(annottees: Seq[Any]) extends Loggers {
+private[catnip] class DerivedImpl(config: Map[String, (String, List[String])])(val c: Context)(annottees: Seq[Any])
+    extends Loggers {
 
   import c.universe._
 
   private type TypeClass = TypeName
+
+  // TODO: there must be a better way to dealias F[_] type
+  private def str2TypeConstructor(typeClassName: String): Type =
+    c.typecheck(c.parse(s"null: $typeClassName[Nothing]")).tpe.dealias.typeConstructor
 
   private def buildDerivation(classDef: ClassDef, typeClassName: TypeClass): ValOrDefDef = classDef match {
     case q"""$_ class $name[..${params: Seq[TypeDef] }] $_(...${ctorParams: Seq[Seq[ValDef]] })
                   extends { ..$_ }
                   with ..$_ { $_ => ..$_ }""" =>
       withTraceLog("Derivation expanded") {
-        // TODO: there must be a better way to dealias F[_] type
-        val fType        = c.typecheck(c.parse(s"null: $typeClassName[Nothing]")).tpe.dealias.typeConstructor
+        val fType        = str2TypeConstructor(typeClassName.toString)
+        val otherReqTCs  = config(fType.toString)._2.map(str2TypeConstructor)
         val needKind     = scala.util.Try(c.typecheck(c.parse(s"null: $fType[List]"))).isSuccess
         val implName     = TermName(s"_derived_${fType.toString.replace('.', '_')}")
         lazy val aType   = if (params.nonEmpty) tq"$name[..${params.map(_.name)}]" else tq"$name"
-        val providerArgs = ctorParams.flatten.map(p => s"${p.name}: $fType[${p.tpt}]").map(c.parse)
-        val body         = c.parse(s"${config(fType.toString)}[${if (needKind) name else aType}]")
+        val providerArgs = ctorParams.flatten.flatMap { p =>
+          (fType :: otherReqTCs).map(tpe => s"${tpe.toString.replace('.', '_')}_${p.name}: $tpe[${p.tpt}]")
+        }.map(c.parse)
+        val body         = c.parse(s"${config(fType.toString)._1}[${if (needKind) name else aType}]")
         if (params.isEmpty || needKind) q"""implicit val $implName = $body""":            ValDef
         else q"""implicit def $implName[..$params](implicit ..$providerArgs)  = $body""": DefDef
       }
@@ -77,12 +84,14 @@ private[catnip] object DerivedImpl {
       .filterNot(_ startsWith """#""")
       .filterNot(_.isEmpty)
       .map { s =>
-        val kv = s.split('=')
-        kv(0) -> kv(1)
+        val kv                           = s.split('=')
+        val typeClass                    = kv(0)
+        val generator :: otherRequiredTC = kv(1).split(',').toList
+        typeClass.trim -> (generator -> otherRequiredTC)
       }
       .toMap
 
-  private val mappings: Map[Type, Map[String, String]] = Map(
+  private val mappings: Map[Type, Map[String, (String, List[String])]] = Map(
     Type.Semi -> loadConfig("derive.semi.conf"),
     Type.Cached -> loadConfig("derive.cached.conf")
   )

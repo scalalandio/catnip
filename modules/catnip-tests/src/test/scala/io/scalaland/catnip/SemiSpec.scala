@@ -22,9 +22,8 @@ class SemiSpec extends Specification {
 
     "handle parametric classes" in {
       // given
-      // cats.Show is not supported until https://github.com/typelevel/kittens/issues/102 is resolved
       @Semi(
-        cats.Order, cats.Functor, cats.Foldable, cats.MonoidK, alleycats.Empty
+        cats.Order, cats.Show, cats.Functor, cats.Foldable, cats.MonoidK, alleycats.Empty
       ) final case class Param[A](a: List[A])
 
       // when
