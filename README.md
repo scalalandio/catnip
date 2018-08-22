@@ -28,7 +28,7 @@ with a simple macro-annotation:
 
 ```scala
 import io.scalaland.catnip._
-import cats.implicits._
+import cats.implicits._ // don't forget to import the right implicits!
 
 @Semi(cats.Eq, cats.Monoid, cats.Show) final case class Test(a: String)
 
@@ -54,6 +54,49 @@ interp.load.plugin.ivy("org.scalamacros" % "paradise_2.12.4" % "2.1.1")
  * `@Cached`: `cats.Eq`, `cats.PartialOrder`, `cats.Order`, `cats.Hash`,
    `cats.Functor`, `cats.Show`, `cats.MonoidK`, `cats.Semigroup`,
    `cats.SemigroupK`.
+
+## Internals
+
+Macro turns
+
+```scala
+@Semi(cats.Semigroup) final case class TestSemi(a: String)
+
+@Semi(cats.SemigroupK, cats.Eq) final case class TestSemiK[A](a: List[A])
+```
+into
+```scala
+final case class TestSemi(a: String)
+object TestSemi {
+  implicit val _derived_cats_kernel_Semigroup = cats.derived.semi.semigroup[TestSemi]
+}
+
+final case class TestSemiK[A](a: List[A])
+object TestSemiK {
+  implicit val _derived_cats_SemigroupK = cats.derived.semi.semigroupK[TestSemiK];
+  implicit def _derived_cats_kernel_Eq[A](implicit cats_kernel_Eq_a: cats.kernel.Eq[List[A]]) = cats.derived.semi.eq[TestSemiK[A]]
+}
+```
+
+In order to do so it:
+
+ * takes the companion object from the argument
+ * turns it into a class name an dealias it (so CO should match the class!)
+ * then reads [`derive.semi.conf`](modules/catnip/src/main/resources/derive.semi.conf)
+   - this class contains type class to kittens generator mappings
+ * for plain types is just paste the body
+ * for parametric types `[A]` is reuses `TypeClass` to create an implicit
+   `TypeClass[A]` argument
+ * in special cases like `Show` which would require additional type class
+   (`shapeless.Typeable[A]`), they are defined in config after the generator
+   function and separated by commas
+
+Therefore, you should be able to extend the abilities of the macro by expanding
+the content of `derive.semi.conf`. (Some merge strategy for resources I guess?
+That and making sure that compiler _sees_ the resources, since if you define them
+in the same project you want compiler to use them it is not the case).
+
+Same for `@Cached` and [`derive.cached.conf`](modules/catnip/src/main/resources/derive.cached.conf).
 
 ## Limitations
 
