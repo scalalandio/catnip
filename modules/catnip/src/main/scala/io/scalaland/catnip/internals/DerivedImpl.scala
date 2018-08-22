@@ -24,7 +24,7 @@ private[catnip] class DerivedImpl(config: Map[String, (String, List[String])])(v
         val needKind     = scala.util.Try(c.typecheck(c.parse(s"null: $fType[List]"))).isSuccess
         val implName     = TermName(s"_derived_${fType.toString.replace('.', '_')}")
         lazy val aType   = if (params.nonEmpty) tq"$name[..${params.map(_.name)}]" else tq"$name"
-        val providerArgs = ctorParams.flatten.flatMap { p =>
+        val providerArgs = ctorParams.flatten.groupBy(_.tpt.toString).flatMap(_._2.headOption.toList).flatMap { p =>
           (fType :: otherReqTCs).map(tpe => s"${tpe.toString.replace('.', '_')}_${p.name}: $tpe[${p.tpt}]")
         }.map(c.parse)
         val body         = c.parse(s"${config(fType.toString)._1}[${if (needKind) name else aType}]")

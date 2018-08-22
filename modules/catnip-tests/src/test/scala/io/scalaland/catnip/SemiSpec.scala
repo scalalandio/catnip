@@ -135,15 +135,15 @@ class SemiSpec extends Specification {
 
     "generate for cats.Functor" in {
       // given
-      @Semi(cats.Functor) final case class TestFunctor[A](a: A)
+      @Semi(cats.Functor) final case class TestFunctor[A](a: A, b: A)
 
       // when
-      val result1 = TestFunctor("1").map(_.toInt)
-      val result2 = TestFunctor("2").map(_.toInt)
+      val result1 = TestFunctor("1", "3").map(_.toInt)
+      val result2 = TestFunctor("2", "4").map(_.toInt)
 
       // then
-      result1 must beEqualTo(TestFunctor(1))
-      result2 must beEqualTo(TestFunctor(2))
+      result1 must beEqualTo(TestFunctor(1, 3))
+      result2 must beEqualTo(TestFunctor(2, 4))
     }
 
     "generate for cats.Foldable" in {
