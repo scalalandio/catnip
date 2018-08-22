@@ -40,7 +40,7 @@ Test("a").show          // "Test(a = a)"
 You can also test it with ammonite like:
 
 ```scala
-import $ivy.`io.scalaland::catnip:0.1`, io.scalaland.catnip._, cats.implicits._
+import $ivy.`io.scalaland::catnip:0.2.1`, io.scalaland.catnip._, cats.implicits._
 interp.load.plugin.ivy("org.scalamacros" % "paradise_2.12.4" % "2.1.1")
 
 @Semi(cats.Eq, cats.Monoid, cats.Functor) final case class Test[A](a: A)
