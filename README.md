@@ -23,14 +23,15 @@ libraryDependencies += "io.scalaland" %%% "catnip" % catnipVersion // see Maven 
 addCompilerPlugin("org.scalamacros" % "paradise" % "2.1.1" cross sbt.CrossVersion.patch)
 ```
 
-From now on you can add implicit kitten-generated type classes to you case classes
+From now on you can add implicit Kittens-generated type classes for your case classes
 with a simple macro-annotation:
 
 ```scala
 import io.scalaland.catnip._
+import cats._
 import cats.implicits._ // don't forget to import the right implicits!
 
-@Semi(cats.Eq, cats.Monoid, cats.Show) final case class Test(a: String)
+@Semi(Eq, Monoid, Show) final case class Test(a: String)
 
 Test("a") === Test("b") // false
 Test("a") |+| Test("b") // Test("ab")
@@ -40,11 +41,18 @@ Test("a").show          // "Test(a = a)"
 You can also test it with ammonite like:
 
 ```scala
-import $ivy.`io.scalaland::catnip:0.2.1`, io.scalaland.catnip._, cats.implicits._
+import $ivy.`io.scalaland::catnip:0.2.1`, io.scalaland.catnip._, cats._, cats.implicits._
 interp.load.plugin.ivy("org.scalamacros" % "paradise_2.12.4" % "2.1.1")
 
-@Semi(cats.Eq, cats.Monoid, cats.Functor) final case class Test[A](a: A)
+@Semi(Eq, Monoid, Functor) final case class Test[A](a: A)
+
+Test("a") === Test("b") // false
+Test("a") |+| Test("b") // Test("ab")
+Test("1").map(_.toInt)  // "Test(a = 1)"
 ```
+
+If you want to replace semi automatic derivation with cached automatic derivation
+use `@Cached` instead of `@Semi` (see a list of supported type classes below).
 
 ## Implemented
 
@@ -100,15 +108,19 @@ Same for `@Cached` and [`derive.cached.conf`](modules/catnip/src/main/resources/
 
 ## Limitations
 
- * type checker complains if you use type aliases from the same compilation unit
-   ```scala
-   type X = cats.Eq; val X = cats.Eq
-   @Semi(X) final case class Test(a: String)
-   // scala.reflect.macros.TypecheckException: not found: type X
-   ```
- * same if you rename type during import
-   ```scala
-   import cats.{ Eq => X }
-   @Semi(X) final case class Test(a: String)
-   // scala.reflect.macros.TypecheckException: not found: type X
-   ```
+Type checker complains if you use type aliases from the same compilation unit
+
+```scala
+type X = cats.Eq; val X = cats.Eq
+@Semi(X) final case class Test(a: String)
+// scala.reflect.macros.TypecheckException: not found: type X
+```
+same if you rename type during import
+```scala
+import cats.{ Eq => X }
+@Semi(X) final case class Test(a: String)
+// scala.reflect.macros.TypecheckException: not found: type X
+```
+   
+However, if you simply import definitions or aliases already defined somewhere else,
+you should have no issues.
