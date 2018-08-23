@@ -48,7 +48,7 @@ interp.load.plugin.ivy("org.scalamacros" % "paradise_2.12.4" % "2.1.1")
 
 Test("a") === Test("b") // false
 Test("a") |+| Test("b") // Test("ab")
-Test("1").map(_.toInt)  // "Test(a = 1)"
+Test("1").map(_.toInt)  // Test(1)
 ```
 
 If you want to replace semi automatic derivation with cached automatic derivation
