@@ -16,35 +16,25 @@ function initiate-tmux() {
   select-pane $MainW -R; send-to $MainW Enter;
   rename-window $MainW 'root';
 
-  CommonW=$TmuxSessionName:1
-  new-window-splitwh-setup $CommonW 'modules/common' 'Common';
-  select-pane $CommonW -L;
-  send-to $CommonW \
+  CatnipJVMW=$TmuxSessionName:1
+  new-window-splitwh-setup $CatnipJVMW 'modules/catnipJVM' 'CatnipJVM';
+  select-pane $CatnipJVMW -L;
+  send-to $CatnipJVMW \
       '../..' Enter \
       'sbt' Enter \
-      'project common' Enter \
+      'project catnipJVM' Enter \
   ;
-  select-pane $CommonW -R;
+  select-pane $CatnipJVMW -R;
 
-  FirstW=$TmuxSessionName:2
-  new-window-splitwh-setup $FirstW 'modules/first' 'First';
-  select-pane $FirstW -L;
-  send-to $FirstW \
+  CatnipJS=$TmuxSessionName:2
+  new-window-splitwh-setup CatnipJS 'modules/catnipJS' 'CatnipJS';
+  select-pane $CatnipJS -L;
+  send-to $CatnipJS \
       '../..' Enter \
       'sbt' Enter \
-      'project first' Enter \
+      'project catnipJS' Enter \
   ;
-  select-pane $FirstW -R;
-
-  SecondW=$TmuxSessionName:4
-  new-window-splitwh-setup $SecondW 'modules/second' 'Second';
-  select-pane $SecondW -L;
-  send-to $SecondW \
-      '../..' Enter \
-      'sbt' Enter \
-      'project second' Enter \
-  ;
-  select-pane $SecondW -R;
+  select-pane $CatnipJS -R;
 
   select-window $MainW;
 }
