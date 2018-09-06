@@ -18,7 +18,7 @@ object Dependencies {
   // libraries versions
   val catsVersion     = "1.3.1"
   val monixVersion    = "3.0.0-RC1"
-  val specs2Version   = "4.2.0"
+  val specs2Version   = "4.3.4"
 
   // resolvers
   val resolvers = Seq(
