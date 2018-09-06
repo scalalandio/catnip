@@ -16,7 +16,7 @@ object Dependencies {
   val scalaFmtVersion = "1.5.1"
 
   // libraries versions
-  val catsVersion     = "1.1.0"
+  val catsVersion     = "1.3.1"
   val monixVersion    = "3.0.0-RC1"
   val specs2Version   = "4.2.0"
 
