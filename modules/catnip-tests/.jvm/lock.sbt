@@ -3,13 +3,14 @@
 // https://github.com/tkawachi/sbt-lock/
 dependencyOverrides ++= Seq(
   "com.chuusai" % "shapeless_2.12" % "2.3.3",
-  "org.typelevel" % "alleycats-core_2.12" % "1.2.0",
-  "org.typelevel" % "cats-core_2.12" % "1.2.0",
-  "org.typelevel" % "cats-kernel_2.12" % "1.2.0",
-  "org.typelevel" % "cats-macros_2.12" % "1.2.0",
+  "org.scala-lang.modules" % "scala-collection-compat_2.12" % "0.1.1",
+  "org.typelevel" % "alleycats-core_2.12" % "1.3.1",
+  "org.typelevel" % "cats-core_2.12" % "1.3.1",
+  "org.typelevel" % "cats-kernel_2.12" % "1.3.1",
+  "org.typelevel" % "cats-macros_2.12" % "1.3.1",
   "org.typelevel" % "export-hook_2.12" % "1.2.0",
   "org.typelevel" % "kittens_2.12" % "1.1.1",
-  "org.typelevel" % "machinist_2.12" % "0.6.4",
+  "org.typelevel" % "machinist_2.12" % "0.6.5",
   "org.typelevel" % "macro-compat_2.12" % "1.1.1"
 )
-// LIBRARY_DEPENDENCIES_HASH 1f425c5d69f494a5747f9ec04ef7a74b975f234f
+// LIBRARY_DEPENDENCIES_HASH 846791f7e5e18f2d7b55b3d8a6c8a61b401e1a58

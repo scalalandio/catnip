@@ -5,18 +5,19 @@ dependencyOverrides ++= Seq(
   "com.chuusai" % "shapeless_2.12" % "2.3.3",
   "com.chuusai" % "shapeless_sjs0.6_2.12" % "2.3.3",
   "org.scala-js" % "scalajs-library_2.12" % "0.6.24",
+  "org.scala-lang.modules" % "scala-collection-compat_2.12" % "0.1.1",
   "org.typelevel" % "alleycats-core_2.12" % "1.2.0",
-  "org.typelevel" % "alleycats-core_sjs0.6_2.12" % "1.1.0",
+  "org.typelevel" % "alleycats-core_sjs0.6_2.12" % "1.3.1",
   "org.typelevel" % "cats-core_2.12" % "1.2.0",
-  "org.typelevel" % "cats-core_sjs0.6_2.12" % "1.1.0",
+  "org.typelevel" % "cats-core_sjs0.6_2.12" % "1.3.1",
   "org.typelevel" % "cats-kernel_2.12" % "1.2.0",
-  "org.typelevel" % "cats-kernel_sjs0.6_2.12" % "1.1.0",
+  "org.typelevel" % "cats-kernel_sjs0.6_2.12" % "1.3.1",
   "org.typelevel" % "cats-macros_2.12" % "1.2.0",
-  "org.typelevel" % "cats-macros_sjs0.6_2.12" % "1.1.0",
+  "org.typelevel" % "cats-macros_sjs0.6_2.12" % "1.3.1",
   "org.typelevel" % "export-hook_2.12" % "1.2.0",
   "org.typelevel" % "kittens_sjs0.6_2.12" % "1.1.1",
   "org.typelevel" % "machinist_2.12" % "0.6.4",
-  "org.typelevel" % "machinist_sjs0.6_2.12" % "0.6.2",
+  "org.typelevel" % "machinist_sjs0.6_2.12" % "0.6.5",
   "org.typelevel" % "macro-compat_2.12" % "1.1.1"
 )
-// LIBRARY_DEPENDENCIES_HASH 39629be9cbc47a647906122e30ab70f787c91c90
+// LIBRARY_DEPENDENCIES_HASH ff5f22b17390fad276868a0762ef39f0873bf695
