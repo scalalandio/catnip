@@ -76,7 +76,7 @@ object Settings extends Dependencies {
       "-Xlint:type-parameter-shadow",
       "-Xlint:unsound-match"
     ),
-    Compile / console / scalacOptions --= Seq(
+    console / scalacOptions --= Seq(
       // warnings
       "-Ywarn-unused:implicits",
       "-Ywarn-unused:imports",
@@ -151,12 +151,6 @@ object Settings extends Dependencies {
   private val noPublishSettings =
     Seq(skip in publish := true, publishArtifact := false)
 
-  implicit class RunConfigurator(project: CrossProject) {
-
-    def configureRun(main: String): CrossProject = project
-      .settings(Compile / run / mainClass := Some(main))
-  }
-
   implicit class PublishRootConfigurator(project: Project) {
 
     def publish: Project = project
@@ -165,7 +159,6 @@ object Settings extends Dependencies {
     def noPublish: Project = project
       .settings(noPublishSettings)
   }
-
 
   implicit class PublishConfigurator(project: CrossProject) {
 
