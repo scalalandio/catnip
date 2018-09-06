@@ -15,6 +15,16 @@ private[catnip] class DerivedImpl(config: Map[String, (String, List[String])])(v
     c.typecheck(c.parse(s"null: $typeClassName[Nothing]")).tpe.dealias.typeConstructor
 
   private def buildDerivation(classDef: ClassDef, typeClassName: TypeClass): ValOrDefDef = classDef match {
+    case q"""$_ trait $name[..${params: Seq[TypeDef] }]
+                  extends { ..$_ }
+                  with ..$_ { $_ => ..$_ }""" =>
+      withTraceLog("Derivation expanded") {
+        val fType        = str2TypeConstructor(typeClassName.toString)
+        val implName     = TermName(s"_derived_${fType.toString.replace('.', '_')}")
+        lazy val aType   = if (params.nonEmpty) tq"$name[..${params.map(_.name)}]" else tq"$name"
+        val body         = c.parse(s"${config(fType.toString)._1}[$aType]")
+        q"""implicit val $implName = $body""":            ValDef
+      }
     case q"""$_ class $name[..${params: Seq[TypeDef] }] $_(...${ctorParams: Seq[Seq[ValDef]] })
                   extends { ..$_ }
                   with ..$_ { $_ => ..$_ }""" =>
@@ -37,7 +47,7 @@ private[catnip] class DerivedImpl(config: Map[String, (String, List[String])])(v
     objectDef match {
       case q"$mods object $tname extends { ..$earlydefns } with ..$parents { $self => ..$body }" =>
         q"""$mods object $tname extends { ..$earlydefns } with ..$parents { $self =>
-              $body
+              ..$body
               ..${typeClasses.map(buildDerivation(classDef, _))}
             }""": ModuleDef
     }

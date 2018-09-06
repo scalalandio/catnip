@@ -48,6 +48,24 @@ class SemiSpec extends Specification {
       result2 must beFalse
     }
 
+    "handle sealed hierarchies" in {
+      // given
+      @Semi(cats.Eq) sealed trait Test extends Product with Serializable
+      object Test {
+        // @Semi(cats.Eq) // TODO: handle this without knownDirectSubclass issue
+        final case class CaseClass(a: String) extends Test
+        case object CaseObject extends Test
+      }
+
+      // when
+      val result1 = cats.Eq[Test].eqv(Test.CaseClass("a"), Test.CaseClass("a"))
+      val result2 = cats.Eq[Test].eqv(Test.CaseClass("a"), Test.CaseObject)
+
+      // then
+      result1 must beTrue
+      result2 must beFalse
+    }
+
     /*
     // TODO: local aliases fail type checker
     "handle type aliases" in {
