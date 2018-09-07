@@ -19,26 +19,42 @@ private[catnip] class DerivedImpl(config: Map[String, (String, List[String])])(v
                   extends { ..$_ }
                   with ..$_ { $_ => ..$_ }""" =>
       withTraceLog("Derivation expanded") {
-        val fType        = str2TypeConstructor(typeClassName.toString)
-        val implName     = TermName(s"_derived_${fType.toString.replace('.', '_')}")
-        lazy val aType   = if (params.nonEmpty) tq"$name[..${params.map(_.name)}]" else tq"$name"
-        val body         = c.parse(s"${config(fType.toString)._1}[$aType]")
-        q"""implicit val $implName = $body""":            ValDef
+        val fType      = str2TypeConstructor(typeClassName.toString)
+        val implName   = TermName(s"_derived_${fType.toString.replace('.', '_')}")
+        lazy val aType = if (params.nonEmpty) tq"$name[..${params.map(_.name)}]" else tq"$name"
+        val body       = c.parse(s"${config(fType.toString)._1}[$aType]")
+        q"""implicit val $implName = $body""": ValDef
       }
     case q"""$_ class $name[..${params: Seq[TypeDef] }] $_(...${ctorParams: Seq[Seq[ValDef]] })
                   extends { ..$_ }
                   with ..$_ { $_ => ..$_ }""" =>
       withTraceLog("Derivation expanded") {
-        val fType        = str2TypeConstructor(typeClassName.toString)
-        val otherReqTCs  = config(fType.toString)._2.map(str2TypeConstructor)
-        val needKind     = scala.util.Try(c.typecheck(c.parse(s"null: $fType[List]"))).isSuccess
-        val implName     = TermName(s"_derived_${fType.toString.replace('.', '_')}")
-        lazy val aType   = if (params.nonEmpty) tq"$name[..${params.map(_.name)}]" else tq"$name"
-        val providerArgs = ctorParams.flatten.groupBy(_.tpt.toString).flatMap(_._2.headOption.toList).flatMap { p =>
-          (fType :: otherReqTCs).map(tpe => s"${tpe.toString.replace('.', '_')}_${p.name}: $tpe[${p.tpt}]")
-        }.map(c.parse)
-        val body         = c.parse(s"${config(fType.toString)._1}[${if (needKind) name else aType}]")
-        if (params.isEmpty || needKind) q"""implicit val $implName = $body""":            ValDef
+        val fType       = str2TypeConstructor(typeClassName.toString)
+        val otherReqTCs = config(fType.toString)._2.map(str2TypeConstructor)
+        val needKind    = scala.util.Try(c.typecheck(c.parse(s"null: $fType[List]"))).isSuccess
+        val implName    = TermName(s"_derived_${fType.toString.replace('.', '_')}")
+        lazy val aType  = if (params.nonEmpty) tq"$name[..${params.map(_.name)}]" else tq"$name"
+        lazy val argTypes = ctorParams.flatten
+          .groupBy(_.tpt.toString)
+          .flatMap(_._2.headOption.toList)
+          .map(_.tpt.toString)
+        lazy val usedParams = if (needKind) Nil else params.map(_.name).filter { name =>
+          val isParametrized = s"""(^|[,\\[])$name([,\\]]|$$)""".r.pattern.asPredicate.test _
+          argTypes.exists(isParametrized)
+        }
+        val providerArgs = usedParams
+          .flatMap { p =>
+            (fType :: otherReqTCs).map(tpe => s"${tpe.toString.replace('.', '_')}_$p: $tpe[$p]")
+          }
+          .map(c.parse)
+        lazy val suppressUnused = usedParams
+          .flatMap { p =>
+            (fType :: otherReqTCs).map(tpe => s"${tpe.toString.replace('.', '_')}_$p.hashCode;")
+          }
+          .mkString("")
+        val body =
+          c.parse(s"$suppressUnused${config(fType.toString)._1}[${if (needKind) name else aType}]")
+        if (usedParams.isEmpty) q"""implicit val $implName = $body""":            ValDef
         else q"""implicit def $implName[..$params](implicit ..$providerArgs)  = $body""": DefDef
       }
   }
