@@ -41,7 +41,7 @@ Test("a").show          // "Test(a = a)"
 You can also test it with ammonite like:
 
 ```scala
-import $ivy.`io.scalaland::catnip:0.2.1`, io.scalaland.catnip._, cats._, cats.implicits._
+import $ivy.`io.scalaland::catnip:0.4.0`, io.scalaland.catnip._, cats._, cats.implicits._
 interp.load.plugin.ivy("org.scalamacros" % "paradise_2.12.4" % "2.1.1")
 
 @Semi(Eq, Monoid, Functor) final case class Test[A](a: A)
@@ -51,17 +51,11 @@ Test("a") |+| Test("b") // Test("ab")
 Test("1").map(_.toInt)  // Test(1)
 ```
 
-If you want to replace semi automatic derivation with cached automatic derivation
-use `@Cached` instead of `@Semi` (see a list of supported type classes below).
-
 ## Implemented
 
  * `@Semi`: `cats.Eq`, `cats.PartialOrder`, `cats.Order`, `cats.Hash`,
    `cats.Functor`, `cats.Foldable`, `cats.Show`,  `cats.Monoid`, `cats.MonoidK`,
-   `cats.Semigroup`, `cats.SemigroupK`, `alleycats.Empty`,
- * `@Cached`: `cats.Eq`, `cats.PartialOrder`, `cats.Order`, `cats.Hash`,
-   `cats.Functor`, `cats.Show`, `cats.MonoidK`, `cats.Semigroup`,
-   `cats.SemigroupK`.
+   `cats.Semigroup`, `cats.SemigroupK`, `alleycats.Empty`.
 
 ## Internals
 
@@ -103,8 +97,6 @@ Therefore, you should be able to extend the abilities of the macro by expanding
 the content of `derive.semi.conf`. (Some merge strategy for resources I guess?
 That and making sure that compiler _sees_ the resources, since if you define them
 in the same project you want compiler to use them it is not the case).
-
-Same for `@Cached` and [`derive.cached.conf`](modules/catnip/src/main/resources/derive.cached.conf).
 
 ## Limitations
 

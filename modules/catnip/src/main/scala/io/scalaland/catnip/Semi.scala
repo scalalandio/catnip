@@ -14,5 +14,5 @@ class Semi(typeClasses: Any*) extends StaticAnnotation {
 
 private object Semi {
 
-  def impl(c: Context)(annottees: c.Expr[Any]*): c.Expr[Any] = DerivedImpl.impl(DerivedImpl.Type.Semi)(c)(annottees)
+  def impl(c: Context)(annottees: c.Expr[Any]*): c.Expr[Any] = DerivedImpl.impl(c)(annottees)
 }

@@ -14,34 +14,37 @@ private[catnip] class DerivedImpl(config: Map[String, (String, List[String])])(v
   private def str2TypeConstructor(typeClassName: String): Type =
     c.typecheck(c.parse(s"null: $typeClassName[Nothing]")).tpe.dealias.typeConstructor
 
+  private def isParametried(name: TypeName): String => Boolean =
+    s"""(^|[,\\[])$name([,\\]]|$$)""".r.pattern.asPredicate.test _
+
   private def buildDerivation(classDef: ClassDef, typeClassName: TypeClass): ValOrDefDef = classDef match {
     case q"""$_ trait $name[..${params: Seq[TypeDef] }]
                   extends { ..$_ }
                   with ..$_ { $_ => ..$_ }""" =>
-      withTraceLog("Derivation expanded") {
+      withTraceLog(s"Derivation expanded for $name trait") {
         val fType      = str2TypeConstructor(typeClassName.toString)
         val implName   = TermName(s"_derived_${fType.toString.replace('.', '_')}")
-        lazy val aType = if (params.nonEmpty) tq"$name[..${params.map(_.name)}]" else tq"$name"
-        val body       = c.parse(s"${config(fType.toString)._1}[$aType]")
-        q"""implicit val $implName = $body""": ValDef
+        lazy val aType = if (params.nonEmpty) TypeName(tq"$name[..${params.map(_.name)}]".toString) else name
+        val body       = c.parse(s"{ ${config(fType.toString)._1}[$aType] }")
+        val returnType = tq"$fType[$aType]"
+        // TODO: figure out, why this doesn't work
+        // q"""implicit val $implName: $returnType = $body""": ValDef
+        c.parse(s"""implicit val $implName: $returnType = $body""").asInstanceOf[ValDef]
       }
     case q"""$_ class $name[..${params: Seq[TypeDef] }] $_(...${ctorParams: Seq[Seq[ValDef]] })
                   extends { ..$_ }
                   with ..$_ { $_ => ..$_ }""" =>
-      withTraceLog("Derivation expanded") {
+      withTraceLog(s"Derivation expanded for $name class") {
         val fType       = str2TypeConstructor(typeClassName.toString)
         val otherReqTCs = config(fType.toString)._2.map(str2TypeConstructor)
         val needKind    = scala.util.Try(c.typecheck(c.parse(s"null: $fType[List]"))).isSuccess
         val implName    = TermName(s"_derived_${fType.toString.replace('.', '_')}")
-        lazy val aType  = if (params.nonEmpty) tq"$name[..${params.map(_.name)}]" else tq"$name"
-        lazy val argTypes = ctorParams.flatten
-          .groupBy(_.tpt.toString)
-          .flatMap(_._2.headOption.toList)
-          .map(_.tpt.toString)
-        lazy val usedParams = if (needKind) Nil else params.map(_.name).filter { name =>
-          val isParametrized = s"""(^|[,\\[])$name([,\\]]|$$)""".r.pattern.asPredicate.test _
-          argTypes.exists(isParametrized)
-        }
+        lazy val aType  = TypeName(if (params.nonEmpty) tq"$name[..${params.map(_.name)}]".toString else name.toString)
+        lazy val argTypes =
+          ctorParams.flatten.groupBy(_.tpt.toString).flatMap(_._2.headOption.toList).map(_.tpt.toString)
+        lazy val usedParams =
+          if (needKind) Nil
+          else params.map(_.name).filter(name => argTypes.exists(isParametried(name)))
         val providerArgs = usedParams
           .flatMap { p =>
             (fType :: otherReqTCs).map(tpe => s"${tpe.toString.replace('.', '_')}_$p: $tpe[$p]")
@@ -52,10 +55,16 @@ private[catnip] class DerivedImpl(config: Map[String, (String, List[String])])(v
             (fType :: otherReqTCs).map(tpe => s"${tpe.toString.replace('.', '_')}_$p.hashCode;")
           }
           .mkString("")
-        val body =
-          c.parse(s"$suppressUnused${config(fType.toString)._1}[${if (needKind) name else aType}]")
-        if (usedParams.isEmpty) q"""implicit val $implName = $body""":            ValDef
-        else q"""implicit def $implName[..$params](implicit ..$providerArgs)  = $body""": DefDef
+        val tcForType  = if (needKind) name else aType
+        val body       = c.parse(s"{ $suppressUnused${config(fType.toString)._1}[$tcForType] }")
+        val returnType = tq"$fType[$tcForType]"
+        // TODO: figure out, why this doesn't work
+        // if (usedParams.isEmpty) q"""implicit val $implName: $returnType = $body""":                   ValDef
+        // else q"""implicit def $implName[..$params](implicit ..$providerArgs): $returnType = $body""": DefDef
+        if (usedParams.isEmpty) c.parse(s"""implicit val $implName: $returnType = $body""").asInstanceOf[ValDef]
+        else
+          c.parse(q"""implicit def $implName[..$params](implicit ..$providerArgs): $returnType = $body""".toString)
+            .asInstanceOf[DefDef]
       }
   }
 
@@ -88,18 +97,12 @@ private[catnip] class DerivedImpl(config: Map[String, (String, List[String])])(v
       case Expr(classDef: ClassDef) :: Nil =>
         c.Expr(q"""$classDef
                    ${createCompanion(classDef, typeClasses)}""")
-      case got => c.abort(c.enclosingPosition, s"@Semi or @Cached can only annotate class, got: $got")
+      case got => c.abort(c.enclosingPosition, s"@Semi can only annotate class, got: $got")
     }
   }
 }
 
 private[catnip] object DerivedImpl {
-
-  sealed trait Type
-  object Type {
-    case object Semi extends Type
-    case object Cached extends Type
-  }
 
   private def loadConfig(name: String) =
     scala.io.Source
@@ -117,11 +120,8 @@ private[catnip] object DerivedImpl {
       }
       .toMap
 
-  private val mappings: Map[Type, Map[String, (String, List[String])]] = Map(
-    Type.Semi -> loadConfig("derive.semi.conf"),
-    Type.Cached -> loadConfig("derive.cached.conf")
-  )
+  private val mappings: Map[String, (String, List[String])] = loadConfig("derive.semi.conf")
 
-  def impl(derivedType: DerivedImpl.Type)(c: Context)(annottees: Seq[c.Expr[Any]]): c.Expr[Any] =
-    new DerivedImpl(mappings(derivedType))(c)(annottees).derive().asInstanceOf[c.Expr[Any]]
+  def impl(c: Context)(annottees: Seq[c.Expr[Any]]): c.Expr[Any] =
+    new DerivedImpl(mappings)(c)(annottees).derive().asInstanceOf[c.Expr[Any]]
 }
