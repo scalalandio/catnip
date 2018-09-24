@@ -9,8 +9,8 @@ dependencyOverrides ++= Seq(
   "org.typelevel" % "cats-kernel_2.12" % "1.3.1",
   "org.typelevel" % "cats-macros_2.12" % "1.3.1",
   "org.typelevel" % "export-hook_2.12" % "1.2.0",
-  "org.typelevel" % "kittens_2.12" % "1.1.1",
+  "org.typelevel" % "kittens_2.12" % "1.2.0",
   "org.typelevel" % "machinist_2.12" % "0.6.5",
   "org.typelevel" % "macro-compat_2.12" % "1.1.1"
 )
-// LIBRARY_DEPENDENCIES_HASH babfe0e23244d353e13d47c9a9095d7e0710f02b
+// LIBRARY_DEPENDENCIES_HASH 27e4d9585ba068741f4dc91f22ff1ee7d37c1e45

@@ -28,7 +28,7 @@ object Dependencies {
 
   val alleyCats          = libraryDependencies += "org.typelevel"   %%% "alleycats-core"    % catsVersion
   val cats               = libraryDependencies += "org.typelevel"   %%% "cats-core"         % catsVersion
-  val kittens            = libraryDependencies += "org.typelevel"   %%% "kittens"           % "1.1.1"
+  val kittens            = libraryDependencies += "org.typelevel"   %%% "kittens"           % "1.2.0"
   val shapeless          = libraryDependencies += "com.chuusai"     %%% "shapeless"         % "2.3.3"
 }
 
