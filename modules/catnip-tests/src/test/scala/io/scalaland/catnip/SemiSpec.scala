@@ -181,6 +181,19 @@ class SemiSpec extends Specification {
       result2 must beEqualTo(2)
     }
 
+    "generate for cats.Traverse" in {
+      // given
+      @Semi(cats.Traverse) final case class TestTraverse[A](a: A)
+
+      // when
+      val result1 = TestTraverse(Option("1")).sequence
+      val result2 = TestTraverse(List("1", "2")).traverse(_.map(_.toInt))
+
+      // then
+      result1 must beEqualTo(Some(TestTraverse("1")))
+      result2 must beEqualTo(List(TestTraverse(1), TestTraverse(2)))
+    }
+
     "generate for cats.Show" in {
       // given
       @Semi(cats.Show) final case class TestShow(a: String)
