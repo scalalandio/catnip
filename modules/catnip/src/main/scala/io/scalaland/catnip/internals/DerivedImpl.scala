@@ -2,6 +2,7 @@ package io.scalaland.catnip.internals
 
 import scala.language.experimental.macros
 import scala.reflect.macros.whitebox.Context
+import scala.util.Try
 
 private[catnip] class DerivedImpl(config: Map[String, (String, List[String])])(val c: Context)(annottees: Seq[Any])
     extends Loggers {
@@ -14,7 +15,7 @@ private[catnip] class DerivedImpl(config: Map[String, (String, List[String])])(v
   private def str2TypeConstructor(typeClassName: String): Type =
     c.typecheck(c.parse(s"null: $typeClassName[Nothing]")).tpe.dealias.typeConstructor
 
-  private def isParametried(name: TypeName): String => Boolean =
+  private def isParametrized(name: TypeName): String => Boolean =
     s"""(^|[,\\[])$name([,\\]]|$$)""".r.pattern.asPredicate.test _
 
   private def buildDerivation(classDef: ClassDef, typeClassName: TypeClass): ValOrDefDef = classDef match {
@@ -44,7 +45,7 @@ private[catnip] class DerivedImpl(config: Map[String, (String, List[String])])(v
           ctorParams.flatten.groupBy(_.tpt.toString).flatMap(_._2.headOption.toList).map(_.tpt.toString)
         lazy val usedParams =
           if (needKind) Nil
-          else params.map(_.name).filter(name => argTypes.exists(isParametried(name)))
+          else params.map(_.name).filter(name => argTypes.exists(isParametrized(name)))
         val providerArgs = usedParams
           .flatMap { p =>
             (fType :: otherReqTCs).map(tpe => s"${tpe.toString.replace('.', '_')}_$p: $tpe[$p]")
@@ -105,23 +106,34 @@ private[catnip] class DerivedImpl(config: Map[String, (String, List[String])])(v
 private[catnip] object DerivedImpl {
 
   private def loadConfig(name: String) =
-    scala.io.Source
-      .fromURL(getClass.getClassLoader.getResources(name).nextElement)
-      .getLines
-      .map(_.trim)
-      .filterNot(_ startsWith """////""")
-      .filterNot(_ startsWith """#""")
-      .filterNot(_.isEmpty)
-      .map { s =>
-        val kv                           = s.split('=')
-        val typeClass                    = kv(0)
-        val generator :: otherRequiredTC = kv(1).split(',').toList
-        typeClass.trim -> (generator -> otherRequiredTC)
-      }
-      .toMap
+    Try {
 
-  private val mappings: Map[String, (String, List[String])] = loadConfig("derive.semi.conf")
+      scala.io.Source
+        .fromURL(getClass.getClassLoader.getResources(name).nextElement)
+        .getLines
+        .map(_.trim)
+        .filterNot(_ startsWith """////""")
+        .filterNot(_ startsWith """#""")
+        .filterNot(_.isEmpty)
+        .map { s =>
+          val kv                           = s.split('=')
+          val typeClass                    = kv(0)
+          val generator :: otherRequiredTC = kv(1).split(',').toList
+          typeClass.trim -> (generator -> otherRequiredTC)
+        }
+        .toMap
+    }.toEither.left.map {
+      case _: java.util.NoSuchElementException =>
+        s"Unable to load $name using ${getClass.getClassLoader}"
+      case err: Throwable =>
+        err.getMessage
+    }
+
+  private val mappingsE: Either[String, Map[String, (String, List[String])]] = loadConfig("derive.semi.conf")
 
   def impl(c: Context)(annottees: Seq[c.Expr[Any]]): c.Expr[Any] =
-    new DerivedImpl(mappings)(c)(annottees).derive().asInstanceOf[c.Expr[Any]]
+    mappingsE match {
+      case Right(mappings) => new DerivedImpl(mappings)(c)(annottees).derive().asInstanceOf[c.Expr[Any]]
+      case Left(error) => c.abort(c.enclosingPosition, error)
+    }
 }
