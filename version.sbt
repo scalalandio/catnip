@@ -1,3 +1,3 @@
 import com.typesafe.sbt.SbtGit.git.baseVersion
 
-baseVersion := "0.3"
+baseVersion := "0.5"
