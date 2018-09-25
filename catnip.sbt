@@ -18,7 +18,9 @@ lazy val catnip = crossProject(JVMPlatform, JSPlatform).crossType(CrossType.Pure
   .settings(addCompilerPlugin("org.scalamacros" % "paradise" % "2.1.1" cross sbt.CrossVersion.patch))
 
 lazy val catnipJVM = catnip.jvm
+  .settings(Compile / unmanagedResourceDirectories += baseDirectory.value / "../src/main/resources")
 lazy val catnipJS  = catnip.js
+  .settings(Compile / unmanagedResourceDirectories += baseDirectory.value / "../src/main/resources")
 
 lazy val catnipTests = crossProject(JVMPlatform, JSPlatform).crossType(CrossType.Pure).build.from("catnip-tests")
   .setName("catnip-tests")
