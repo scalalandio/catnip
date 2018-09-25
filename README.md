@@ -53,10 +53,10 @@ Test("1").map(_.toInt)  // Test(1)
 
 ## Implemented
 
- * `@Semi`: `cats.Eq`, `cats.PartialOrder`, `cats.Order`, `cats.Hash`,
-   `cats.Functor`, `cats.Foldable`, `cats.Show`, `cats.derived.ShowPretty`,
-   `cats.Monoid`, `cats.MonoidK`, `cats.Semigroup`, `cats.SemigroupK`,
-   `alleycats.Empty`.
+`cats.Eq`, `cats.PartialOrder`, `cats.Order`, `cats.Hash`,
+`cats.Functor`, `cats.Foldable`, `cats.Traverse`, `cats.Show`, `cats.derived.ShowPretty`,
+`cats.Monoid`, `cats.MonoidK`, `cats.Semigroup`, `cats.SemigroupK`,
+`alleycats.Empty`.
 
 ## Internals
 
