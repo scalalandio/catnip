@@ -20,4 +20,4 @@ dependencyOverrides ++= Seq(
   "org.typelevel" % "machinist_sjs0.6_2.12" % "0.6.5",
   "org.typelevel" % "macro-compat_2.12" % "1.1.1"
 )
-// LIBRARY_DEPENDENCIES_HASH d25e5b86d4a214b7bf7d3ff624e2935f11e9c2b2
+// LIBRARY_DEPENDENCIES_HASH 3c6d978973e31cf767d13efdc069b2682bf4808f

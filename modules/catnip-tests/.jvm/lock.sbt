@@ -13,4 +13,4 @@ dependencyOverrides ++= Seq(
   "org.typelevel" % "machinist_2.12" % "0.6.5",
   "org.typelevel" % "macro-compat_2.12" % "1.1.1"
 )
-// LIBRARY_DEPENDENCIES_HASH a3a7a9b0bc2dc6d9f335fc282a8121e90007e6e4
+// LIBRARY_DEPENDENCIES_HASH c17086026af918499dae1c57e5536983dced8f39
