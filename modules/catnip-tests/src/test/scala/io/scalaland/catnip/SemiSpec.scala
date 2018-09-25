@@ -207,6 +207,23 @@ class SemiSpec extends Specification {
       result2 must beEqualTo("TestShow(a = b)")
     }
 
+    "generate for cats.derived.ShowPretty" in {
+      // given
+      @Semi(cats.derived.ShowPretty) final case class TestShowPretty(a: String)
+
+      // when
+      val result1 = TestShowPretty("a").show
+      val result2 = TestShowPretty("b").show
+
+      // then
+      result1 must beEqualTo("""TestShowPretty(
+                               |  a = a
+                               |)""".stripMargin)
+      result2 must beEqualTo("""TestShowPretty(
+                               |  a = b
+                               |)""".stripMargin)
+    }
+
     "generate for cats.Monoid" in {
       // given
       @Semi(cats.Monoid, cats.Eq) final case class TestMonoid(a: String)
