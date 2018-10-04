@@ -2,7 +2,7 @@ package io.scalaland.catnip.internals
 
 import scala.language.experimental.macros
 import scala.reflect.macros.whitebox.Context
-import scala.util.Try
+import scala.util.{ Failure, Success, Try }
 
 private[catnip] class DerivedImpl(config: Map[String, (String, List[String])])(val c: Context)(annottees: Seq[Any])
     extends Loggers {
@@ -105,9 +105,8 @@ private[catnip] class DerivedImpl(config: Map[String, (String, List[String])])(v
 
 private[catnip] object DerivedImpl {
 
-  private def loadConfig(name: String) =
+  private def loadConfig(name: String): Either[String, Map[String, (String, List[String])]] =
     Try {
-
       scala.io.Source
         .fromURL(getClass.getClassLoader.getResources(name).nextElement)
         .getLines
@@ -122,11 +121,11 @@ private[catnip] object DerivedImpl {
           typeClass.trim -> (generator -> otherRequiredTC)
         }
         .toMap
-    }.toEither.left.map {
-      case _: java.util.NoSuchElementException =>
-        s"Unable to load $name using ${getClass.getClassLoader}"
-      case err: Throwable =>
-        err.getMessage
+    } match {
+      case Success(value) => Right(value)
+      case Failure(_: java.util.NoSuchElementException) =>
+        Left(s"Unable to load $name using ${getClass.getClassLoader}")
+      case Failure(err: Throwable) => Left(err.getMessage)
     }
 
   private val mappingsE: Either[String, Map[String, (String, List[String])]] = loadConfig("derive.semi.conf")

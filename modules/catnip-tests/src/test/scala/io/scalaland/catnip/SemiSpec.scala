@@ -151,9 +151,11 @@ class SemiSpec extends Specification {
       result1 must not(beEqualTo(result2))
     }
 
+    @Semi(cats.Functor) final case class TestFunctor[A](a: A, b: A)
     "generate for cats.Functor" in {
       // given
-      @Semi(cats.Functor) final case class TestFunctor[A](a: A, b: A)
+      // test class moved outside as a workaround for error in 2.11:
+      //   can't existentially abstract over parameterized type TestFunctor[String]
 
       // when
       val result1 = TestFunctor("1", "3").map(_.toInt)
@@ -181,9 +183,11 @@ class SemiSpec extends Specification {
       result2 must beEqualTo(2)
     }
 
+    @Semi(cats.Traverse) final case class TestTraverse[A](a: A)
     "generate for cats.Traverse" in {
       // given
-      @Semi(cats.Traverse) final case class TestTraverse[A](a: A)
+      // test class moved outside as a workaround for error in 2.11:
+      //   can't existentially abstract over parameterized type TestTraverse[Int]
 
       // when
       val result1 = TestTraverse(Option("1")).sequence
@@ -264,9 +268,11 @@ class SemiSpec extends Specification {
       result2 must beEqualTo(TestSemi("ba"))
     }
 
+    @Semi(cats.SemigroupK, cats.Eq) final case class TestSemiK[A](a: List[A])
     "generate for cats.SemigroupK" in {
       // given
-      @Semi(cats.SemigroupK, cats.Eq) final case class TestSemiK[A](a: List[A])
+      // test class moved outside as a workaround for error in 2.11:
+      //   can't existentially abstract over parameterized type TestSemiK[String]
 
       // when
       implicit val a = cats.SemigroupK[TestSemiK].algebra[String]
@@ -278,9 +284,11 @@ class SemiSpec extends Specification {
       result2 must beEqualTo(TestSemiK(List("b", "a")))
     }
 
+    @Semi(alleycats.Empty) final case class TestEmpty[A](a: A)
     "generate for alleycats.Empty" in {
       // given
-      @Semi(alleycats.Empty) final case class TestEmpty[A](a: A)
+      // test class moved outside as a workaround for error in 2.11:
+      //   can't existentially abstract over parameterized type TestEmpty[String]
 
       // when
       val result = alleycats.Empty[TestEmpty[String]].empty

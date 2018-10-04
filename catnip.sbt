@@ -15,7 +15,6 @@ lazy val catnip = crossProject(JVMPlatform, JSPlatform).crossType(CrossType.Pure
   .setInitialImport("cats.implicits._")
   .configureModule
   .publish
-  .settings(addCompilerPlugin("org.scalamacros" % "paradise" % "2.1.1" cross sbt.CrossVersion.patch))
 
 lazy val catnipJVM = catnip.jvm
   .settings(Compile / unmanagedResourceDirectories += baseDirectory.value / "../src/main/resources")
@@ -32,8 +31,7 @@ lazy val catnipTests = crossProject(JVMPlatform, JSPlatform).crossType(CrossType
   .noPublish
   .settings(libraryDependencies ++= Seq(
     "org.specs2" %%% "specs2-core"       % Dependencies.specs2Version % "test",
-    "org.specs2" %%% "specs2-scalacheck" % Dependencies.specs2Version % "test",
-    compilerPlugin("org.scalamacros" % "paradise" % "2.1.1" cross sbt.CrossVersion.patch)
+    "org.specs2" %%% "specs2-scalacheck" % Dependencies.specs2Version % "test"
   ))
 
 lazy val catnipTestsJVM = catnipTests.jvm
