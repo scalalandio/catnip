@@ -38,6 +38,8 @@ object Settings extends Dependencies {
       "-language:implicitConversions",
       "-language:postfixOps",
       // private options
+      "-Xexperimental",
+      "-Ymacro-annotations",
       "-Yno-adapted-args",
       "-Ypartial-unification",
       // warnings
@@ -75,6 +77,29 @@ object Settings extends Dependencies {
       "-Xlint:stars-align",
       "-Xlint:type-parameter-shadow",
       "-Xlint:unsound-match"
+    ).filterNot(
+      (if (scalaVersion.value.startsWith("2.13")) Set(
+        // removed in 2.13.x
+        "-Yno-adapted-args",
+        "-Ypartial-unification",
+        // only for 2.11.x
+        "-Xexperimental"
+      ) else if (scalaVersion.value.startsWith("2.12")) Set(
+        // added in 2.13.x
+        "-Ymacro-annotations",
+        // only for 2.11.x
+        "-Xexperimental"
+      ) else if (scalaVersion.value.startsWith("2.11")) Set(
+        // added in 2.13.x
+        "-Ymacro-annotations",
+        // added in 2.12.x
+        "-Ywarn-extra-implicit",
+        "-Ywarn-macros:after",
+        "-Ywarn-unused:implicits",
+        "-Ywarn-unused:patvars",
+        "-Ywarn-unused:privates",
+        "-Xlint:constant"
+      ) else Set.empty[String]).contains _
     ),
     console / scalacOptions --= Seq(
       // warnings
@@ -111,10 +136,13 @@ object Settings extends Dependencies {
       Wart.Nothing,
       Wart.ToString
     )
-  ) ++ mainDeps
+  ) ++ mainDeps ++ Seq(libraryDependencies ++= (if (!scalaVersion.value.startsWith("2.13")) {
+    Seq(compilerPlugin("org.scalamacros" % "paradise" % "2.1.1" cross sbt.CrossVersion.patch))
+  } else {
+    Nil
+  }))
 
   private val publishSettings = Seq(
-    organization := "io.scalaland",
     homepage := Some(url("https://scalaland.io")),
     licenses := Seq("Apache-2.0" -> url("http://www.apache.org/licenses/LICENSE-2.0")),
     scmInfo := Some(
@@ -132,20 +160,19 @@ object Settings extends Dependencies {
     pomIncludeRepository := { _ =>
       false
     },
-    pomExtra := (
+    pomExtra :=
       <developers>
         <developer>
           <id>krzemin</id>
           <name>Piotr Krzemiński</name>
-          <url>http://github.com/krzemin</url>
+          <url>https://github.com/krzemin</url>
         </developer>
         <developer>
           <id>MateuszKubuszok</id>
           <name>Mateusz Kubuszok</name>
-          <url>http://github.com/MateuszKubuszok</url>
+          <url>https://github.com/MateuszKubuszok</url>
         </developer>
       </developers>
-      )
   )
 
   private val noPublishSettings =
