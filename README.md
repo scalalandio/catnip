@@ -9,18 +9,25 @@ semiautomatic derivations into companion objects themselves.
 
 ## Usage
 
-Add to your sbt
+Add to your sbt (2.11, 2.12):
 
 ```scala
 libraryDependencies += "io.scalaland" %% "catnip" % catnipVersion // see Maven badge
 addCompilerPlugin("org.scalamacros" % "paradise" % "2.1.1" cross sbt.CrossVersion.patch)
 ```
 
-or, if you use Scala.js
+or, if you use Scala.js:
 
 ```scala
 libraryDependencies += "io.scalaland" %%% "catnip" % catnipVersion // see Maven badge
 addCompilerPlugin("org.scalamacros" % "paradise" % "2.1.1" cross sbt.CrossVersion.patch)
+```
+
+or with Scala 2.13.0-M4 (JVM-only due to a Scala.js compiler bug):
+
+```scala
+libraryDependencies += "io.scalaland" %% "catnip" % catnipVersion // see Maven badge
+scalacOptions += "-Ymacro-annotations"
 ```
 
 From now on you can add implicit Kittens-generated type classes for your case classes
@@ -41,7 +48,7 @@ Test("a").show          // "Test(a = a)"
 You can also test it with ammonite like:
 
 ```scala
-import $ivy.`io.scalaland::catnip:0.5.0`, io.scalaland.catnip._, cats._, cats.implicits._
+import $ivy.`io.scalaland::catnip:0.5.1`, io.scalaland.catnip._, cats._, cats.implicits._
 interp.load.plugin.ivy("org.scalamacros" % "paradise_2.12.4" % "2.1.1")
 
 @Semi(Eq, Monoid, Functor) final case class Test[A](a: A)

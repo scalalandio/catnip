@@ -39,6 +39,7 @@ object Settings extends Dependencies {
       "-language:postfixOps",
       // private options
       "-Xexperimental",
+      "-Ybackend-parallelism", "8",
       "-Ymacro-annotations",
       "-Yno-adapted-args",
       "-Ypartial-unification",
@@ -93,6 +94,7 @@ object Settings extends Dependencies {
         // added in 2.13.x
         "-Ymacro-annotations",
         // added in 2.12.x
+        "-Ybackend-parallelism", "8",
         "-Ywarn-extra-implicit",
         "-Ywarn-macros:after",
         "-Ywarn-unused:implicits",
