@@ -14,7 +14,7 @@ install:
               - sudo apt-get install zsh
               - sudo chmod +x scripts/*
               - ./sbt update
-script:         ./sbt fullCoverageTest
+script:         ./sbt test
 after_script:
               - scripts/prepare-test-results-for-ci.sh
               - find $HOME/.sbt -name "*.lock" | xargs rm
