@@ -1,0 +1,183 @@
+<!DOCTYPE html><html><head><link href="META-INF/resources/webjars/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet" /><link href="styles.css" rel="stylesheet" /><link rel="shortcut icon" type="image/png" href="favicon.png" /><meta http-equiv="Content-Type" content="text/html; charset=UTF-8" /><style>
+.scalatex-site-Styles-headerLink{
+  color: #777;
+  opacity: 0.05;
+  text-decoration: none;
+}
+
+
+.scalatex-site-Styles-hoverContainer:hover .scalatex-site-Styles-headerLink{
+  color: #777;
+  opacity: 0.5;
+  text-decoration: none;
+}
+.scalatex-site-Styles-hoverContainer:hover .scalatex-site-Styles-headerLink:hover{
+  opacity: 1.0;
+}
+.scalatex-site-Styles-hoverContainer:hover .scalatex-site-Styles-headerLink:active{
+  opacity: 0.75;
+}
+
+.scalatex-site-Styles-content{
+  color: #777;
+  line-height: 1.6em;
+  margin: 0 auto;
+  margin-left: auto;
+  margin-right: auto;
+  max-width: 800px;
+  padding: 0 1em;
+  padding-bottom: 50px;
+}
+.scalatex-site-Styles-content *{
+  position: relative;
+}
+.scalatex-site-Styles-content p{
+  text-align: justify;
+}
+.scalatex-site-Styles-content a:link{
+  color: #37a;
+  text-decoration: none;
+}
+.scalatex-site-Styles-content a:visited{
+  color: #949;
+  text-decoration: none;
+}
+.scalatex-site-Styles-content a:hover{
+  text-decoration: underline;
+}
+.scalatex-site-Styles-content a:active{
+  color: #000;
+  text-decoration: underline;
+}
+.scalatex-site-Styles-content code{
+  color: #000;
+}
+
+/*Workaround for bug in highlight.js IDEA theme*/
+span.hljs-tag, span.hljs-symbol{
+    background: none;
+}
+    </style><title>Catnip</title><script src="scripts.js"></script></head><body><div>
+
+<script async src="https://www.googletagmanager.com/gtag/js?id=UA-116165806-1"></script>
+
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'UA-116165806-1');
+</script>
+<a href="https://github.com/scalalandio/catnip" style="position: absolute;top: 0px;right: 0px;border: 0;"><img src="https://s3.amazonaws.com/github/ribbons/forkme_right_orange_ff7600.png" alt="Fork me on GitHub" /></a>
+
+<div style="margin: 0px;color: #333;text-align: center;padding: 2.5em 2em 0;border-bottom: 1px solid #eee;display: block;" id="Catnip" class=" scalatex-site-Styles-hoverContainer scalatex-site-Styles-headerTag"><h1 style="margin: 0.2em 0;font-size: 3em;font-weight: 300;">Catnip<a class=" scalatex-site-Styles-headerLink" href="#Catnip" style="position: absolute;right: 0px;"><i class="fa fa-link"></i></a></h1><br /><h2 style="font-weight: 300;color: #ccc;padding: 0px;margin-top: 0px;">Static annotations for Kittens for people who don't like to write semiautomatic derivations into companion objects themselves.</h2></div><div class=" scalatex-site-Styles-content">
+  <div style="margin: 0px;color: #333;text-align: center;padding: 2.5em 2em 0;border-bottom: 1px solid #eee;display: block;" id="Usage" class=" scalatex-site-Styles-hoverContainer scalatex-site-Styles-headerTag"><h1 style="margin: 0.2em 0;font-size: 3em;font-weight: 300;">Usage<a class=" scalatex-site-Styles-headerLink" href="#Usage" style="position: absolute;right: 0px;"><i class="fa fa-link"></i></a></h1><br /></div>
+    <p>
+      Add to your sbt (2.11, 2.12):</p>
+    <pre><code class="scala scalatex-site-Styles-highlightMe">libraryDependencies += &quot;io.scalaland&quot; %% &quot;catnip&quot; % &quot;0.5.1&quot;
+addCompilerPlugin(&quot;org.scalamacros&quot; % &quot;paradise&quot; % &quot;2.1.1&quot; cross sbt.CrossVersion.patch)</code></pre>
+    <p>
+      or, if you use Scala.js:</p>
+    <pre><code class="scala scalatex-site-Styles-highlightMe">libraryDependencies += &quot;io.scalaland&quot; %%% &quot;catnip&quot; % &quot;0.5.1&quot;
+addCompilerPlugin(&quot;org.scalamacros&quot; % &quot;paradise&quot; % &quot;2.1.1&quot; cross sbt.CrossVersion.patch)</code></pre>
+    <p>
+      or with Scala 2.13.0-M4 (JVM-only due to a Scala.js compiler bug):</p>
+    <pre><code class="scala scalatex-site-Styles-highlightMe">libraryDependencies += &quot;io.scalaland&quot; %% &quot;catnip&quot; % &quot;0.5.1&quot;
+scalacOptions += &quot;-Ymacro-annotations&quot;</code></pre>
+    <p>
+      From now on you can add implicit Kittens-generated type classes for your case classes
+      with a simple macro-annotation:</p>
+    <pre><code class="scala scalatex-site-Styles-highlightMe">import io.scalaland.catnip._
+import cats._
+import cats.implicits._ // don't forget to import the right implicits!
+
+@Semi(Eq, Monoid, Show) final case class Test(a: String)
+
+Test(&quot;a&quot;) === Test(&quot;b&quot;) // false
+Test(&quot;a&quot;) |+| Test(&quot;b&quot;) // Test(&quot;ab&quot;)
+Test(&quot;a&quot;).show          // &quot;Test(a = a)&quot;</code></pre>
+    <p>
+      You can also test it with ammonite like:</p>
+    <pre><code class="scala scalatex-site-Styles-highlightMe">import $ivy.`io.scalaland::catnip:0.5.1`, io.scalaland.catnip._, cats._, cats.implicits._
+interp.load.plugin.ivy(&quot;org.scalamacros&quot; % &quot;paradise_2.12.4&quot; % &quot;2.1.1&quot;)
+
+@Semi(Eq, Monoid, Functor) final case class Test[A](a: A)
+
+Test(&quot;a&quot;) === Test(&quot;b&quot;) // false
+Test(&quot;a&quot;) |+| Test(&quot;b&quot;) // Test(&quot;ab&quot;)
+Test(&quot;1&quot;).map(_.toInt)  // Test(1)
+</code></pre>
+  <div style="margin: 0px;color: #333;text-align: center;padding: 2.5em 2em 0;border-bottom: 1px solid #eee;display: block;" id="Implemented" class=" scalatex-site-Styles-hoverContainer scalatex-site-Styles-headerTag"><h1 style="margin: 0.2em 0;font-size: 3em;font-weight: 300;">Implemented<a class=" scalatex-site-Styles-headerLink" href="#Implemented" style="position: absolute;right: 0px;"><i class="fa fa-link"></i></a></h1><br /></div>
+    <code>cats.Eq</code>, <code>cats.PartialOrder</code>, <code>cats.Order</code>, <code>cats.Hash</code>,
+    <code>cats.Functor</code>, <code>cats.Foldable</code>, <code>cats.Traverse</code>, <code>cats.Show</code>,
+    <code>cats.derived.ShowPretty</code>, <code>cats.Monoid</code>, <code>cats.MonoidK</code>,
+    <code>cats.Semigroup</code>, <code>cats.SemigroupK</code>, <code>alleycats.Empty</code>.
+
+  <div style="margin: 0px;color: #333;text-align: center;padding: 2.5em 2em 0;border-bottom: 1px solid #eee;display: block;" id="Internals" class=" scalatex-site-Styles-hoverContainer scalatex-site-Styles-headerTag"><h1 style="margin: 0.2em 0;font-size: 3em;font-weight: 300;">Internals<a class=" scalatex-site-Styles-headerLink" href="#Internals" style="position: absolute;right: 0px;"><i class="fa fa-link"></i></a></h1><br /></div>
+    <p>
+      Macro turns</p>
+    <pre><code class="scala scalatex-site-Styles-highlightMe">@Semi(cats.Semigroup) final case class TestSemi(a: String)
+
+@Semi(cats.SemigroupK, cats.Eq) final case class TestSemiK[A](a: List[A])</code></pre>
+    <p>
+      into</p>
+    <pre><code class="scala scalatex-site-Styles-highlightMe">final case class TestSemi(a: String)
+object TestSemi {
+  implicit val _derived_cats_kernel_Semigroup = cats.derived.semi.semigroup[TestSemi]
+}
+
+final case class TestSemiK[A](a: List[A])
+object TestSemiK {
+  implicit val _derived_cats_SemigroupK = cats.derived.semi.semigroupK[TestSemiK];
+  implicit def _derived_cats_kernel_Eq[A](implicit cats_kernel_Eq_a: cats.kernel.Eq[List[A]]) = cats.derived.semi.eq[TestSemiK[A]]
+}</code></pre>
+    <p>
+      In order to do so it:</p>
+    <ul>
+      <li>
+        takes the companion object from the argument</li>
+      <li>
+        turns it into a class name an dealias it (so CO should match the class!)</li>
+      <li>
+        then reads <link>&lt;pre&gt;derive.semi.conf&lt;/pre&gt;https://github.com/scalalandio/catnip/tree/master/modules/catnip/src/main/resources/derive.semi.conf</link>
+        - this class contains type class to kittens generator mappings</li>
+      <li>
+        for plain types is just paste the body</li>
+      <li>
+        for parametric types <code>[A]</code> is reuses <code>TypeClass</code> to create an implicit <code>TypeClass[A]</code> argument</li>
+      <li>
+        in special cases like <code>Show</code> which would require additional type class
+           (<code>shapeless.Typeable[A]</code>), they are defined in config after the generator
+           function and separated by commas</li>
+      <p>
+        Therefore, you should be able to extend the abilities of the macro by expanding
+        the content of <code>derive.semi.conf</code>. (Some merge strategy for resources I guess?
+        That and making sure that compiler <i>sees</i> the resources, since if you define them
+        in the same project you want compiler to use them it is not the case).
+</p></ul>
+  <div style="margin: 0px;color: #333;text-align: center;padding: 2.5em 2em 0;border-bottom: 1px solid #eee;display: block;" id="Limitations" class=" scalatex-site-Styles-hoverContainer scalatex-site-Styles-headerTag"><h1 style="margin: 0.2em 0;font-size: 3em;font-weight: 300;">Limitations<a class=" scalatex-site-Styles-headerLink" href="#Limitations" style="position: absolute;right: 0px;"><i class="fa fa-link"></i></a></h1><br /></div>
+    <p>
+      Type checker complains if you use type aliases from the same compilation unit</p>
+    <pre><code class="scala scalatex-site-Styles-highlightMe">type X = cats.Eq; val X = cats.Eq
+@Semi(X) final case class Test(a: String)
+// scala.reflect.macros.TypecheckException: not found: type X</code></pre>
+    <p>
+      same if you rename type during import</p>
+    <pre><code class="scala scalatex-site-Styles-highlightMe">import cats.{ Eq =&gt; X }
+@Semi(X) final case class Test(a: String)
+// scala.reflect.macros.TypecheckException: not found: type X</code></pre>
+    <p>
+      However, if you simply import definitions or aliases already defined somewhere else,
+      you should have no issues.</p></div>
+</div><script>
+    scalatex.scrollspy.Controller().main(
+      [{"value":"Catnip","children":[{"value":"Usage","children":[]},{"value":"Implemented","children":[]},{"value":"Internals","children":[]},{"value":"Limitations","children":[]}]}]
+  )</script><script>
+    ['DOMContentLoaded', 'load'].forEach(function(ev){
+      addEventListener(ev, function(){
+        Array.prototype.forEach.call(
+          document.getElementsByClassName('scalatex-site-Styles-highlightMe'),
+          hljs.highlightBlock
+        );
+      })
+    })
+  </script></body></html>                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          
