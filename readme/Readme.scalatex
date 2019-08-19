@@ -1,0 +1,129 @@
+@import Main._
+@import scalatex.site._
+
+@raw("""<script async src="https://www.googletagmanager.com/gtag/js?id=UA-116165806-1"></script>""")
+
+@script
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'UA-116165806-1');
+
+@a(
+  href:="https://github.com/scalalandio/catnip",
+  position.absolute,
+  top:=0,right:=0,border:=0,
+  img(
+    src:="https://s3.amazonaws.com/github/ribbons/forkme_right_orange_ff7600.png",
+    alt:="Fork me on GitHub"
+  )
+)
+
+@sect("Catnip", "Static annotations for Kittens for people who don't like to write semiautomatic derivations into companion objects themselves.")
+  @sect{Usage}
+    @p
+      Add to your sbt (2.11, 2.12):
+    @hl.scala
+      libraryDependencies += "io.scalaland" %% "catnip" % "0.5.1"
+      addCompilerPlugin("org.scalamacros" % "paradise" % "2.1.1" cross sbt.CrossVersion.patch)
+    @p
+      or, if you use Scala.js:
+    @hl.scala
+      libraryDependencies += "io.scalaland" %%% "catnip" % "0.5.1"
+      addCompilerPlugin("org.scalamacros" % "paradise" % "2.1.1" cross sbt.CrossVersion.patch)
+    @p
+      or with Scala 2.13.0-M4 (JVM-only due to a Scala.js compiler bug):
+    @hl.scala
+      libraryDependencies += "io.scalaland" %% "catnip" % "0.5.1"
+      scalacOptions += "-Ymacro-annotations"
+    @p
+      From now on you can add implicit Kittens-generated type classes for your case classes
+      with a simple macro-annotation:
+    @hl.scala
+      import io.scalaland.catnip._
+      import cats._
+      import cats.implicits._ // don't forget to import the right implicits!
+
+      @@Semi(Eq, Monoid, Show) final case class Test(a: String)
+
+      Test("a") === Test("b") // false
+      Test("a") |+| Test("b") // Test("ab")
+      Test("a").show          // "Test(a = a)"
+    @p
+      You can also test it with ammonite like:
+    @hl.scala
+      import $ivy.`io.scalaland::catnip:0.5.1`, io.scalaland.catnip._, cats._, cats.implicits._
+      interp.load.plugin.ivy("org.scalamacros" % "paradise_2.12.4" % "2.1.1")
+
+      @@Semi(Eq, Monoid, Functor) final case class Test[A](a: A)
+
+      Test("a") === Test("b") // false
+      Test("a") |+| Test("b") // Test("ab")
+      Test("1").map(_.toInt)  // Test(1)
+
+  @sect{Implemented}
+    @code{cats.Eq}, @code{cats.PartialOrder}, @code{cats.Order}, @code{cats.Hash},
+    @code{cats.Functor}, @code{cats.Foldable}, @code{cats.Traverse}, @code{cats.Show},
+    @code{cats.derived.ShowPretty}, @code{cats.Monoid}, @code{cats.MonoidK},
+    @code{cats.Semigroup}, @code{cats.SemigroupK}, @code{alleycats.Empty}.
+
+  @sect{Internals}
+    @p
+      Macro turns
+    @hl.scala
+      @@Semi(cats.Semigroup) final case class TestSemi(a: String)
+
+      @@Semi(cats.SemigroupK, cats.Eq) final case class TestSemiK[A](a: List[A])
+    @p
+      into
+    @hl.scala
+      final case class TestSemi(a: String)
+      object TestSemi {
+        implicit val _derived_cats_kernel_Semigroup = cats.derived.semi.semigroup[TestSemi]
+      }
+
+      final case class TestSemiK[A](a: List[A])
+      object TestSemiK {
+        implicit val _derived_cats_SemigroupK = cats.derived.semi.semigroupK[TestSemiK];
+        implicit def _derived_cats_kernel_Eq[A](implicit cats_kernel_Eq_a: cats.kernel.Eq[List[A]]) = cats.derived.semi.eq[TestSemiK[A]]
+      }
+    @p
+      In order to do so it:
+    @ul
+      @li
+        takes the companion object from the argument
+      @li
+        turns it into a class name an dealias it (so CO should match the class!)
+      @li
+        then reads @link("<pre>derive.semi.conf</pre>", "https://github.com/scalalandio/catnip/tree/master/modules/catnip/src/main/resources/derive.semi.conf")
+        - this class contains type class to kittens generator mappings
+      @li
+        for plain types is just paste the body
+      @li
+        for parametric types @code{[A]} is reuses @code{TypeClass} to create an implicit @code{TypeClass[A]} argument
+      @li
+        in special cases like @code{Show} which would require additional type class
+           (@code{shapeless.Typeable[A]}), they are defined in config after the generator
+           function and separated by commas
+      @p
+        Therefore, you should be able to extend the abilities of the macro by expanding
+        the content of @code{derive.semi.conf}. (Some merge strategy for resources I guess?
+        That and making sure that compiler @i{sees} the resources, since if you define them
+        in the same project you want compiler to use them it is not the case).
+
+  @sect{Limitations}
+    @p
+      Type checker complains if you use type aliases from the same compilation unit
+    @hl.scala
+      type X = cats.Eq; val X = cats.Eq
+      @@Semi(X) final case class Test(a: String)
+      // scala.reflect.macros.TypecheckException: not found: type X
+    @p
+      same if you rename type during import
+    @hl.scala
+      import cats.{ Eq => X }
+      @@Semi(X) final case class Test(a: String)
+      // scala.reflect.macros.TypecheckException: not found: type X
+    @p
+      However, if you simply import definitions or aliases already defined somewhere else,
+      you should have no issues.

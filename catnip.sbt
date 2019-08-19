@@ -37,6 +37,21 @@ lazy val catnipTests = crossProject(JVMPlatform, JSPlatform).crossType(CrossType
 lazy val catnipTestsJVM = catnipTests.jvm
 lazy val catnipTestsJS  = catnipTests.js
 
+lazy val readme = scalatex.ScalatexReadme(
+    projectId = "readme",
+    wd        = file(""),
+    url       = "https://github.com/scalalandio/catnip/tree/master",
+    source    = "Readme"
+  )
+  .configureModule
+  .noPublish
+  .enablePlugins(GhpagesPlugin)
+  .settings(
+    siteSourceDirectory := target.value / "scalatex",
+    git.remoteRepo := "git@github.com:scalalandio/catnip.git",
+    Jekyll / makeSite / includeFilter := new FileFilter { def accept(p: File) = true }
+  )
+
 addCommandAlias("fullTest", ";test;scalastyle")
 addCommandAlias("fullCoverageTest", ";coverage;test;coverageReport;coverageAggregate;scalastyle")
 addCommandAlias("relock", ";unlock;reload;update;lock")

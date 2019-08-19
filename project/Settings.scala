@@ -243,7 +243,12 @@ object Settings extends Dependencies {
     def configureRoot: Project = project.settings(rootSettings: _*)
   }
 
-  implicit class ModuleConfigurator(project: CrossProject) {
+  implicit class ModuleConfiguratorP(project: Project) {
+
+    def configureModule: Project = project.settings(modulesSettings: _*).enablePlugins(GitVersioning)
+  }
+
+  implicit class ModuleConfiguratorCP(project: CrossProject) {
 
     def configureModule: CrossProject = project.settings(modulesSettings: _*).enablePlugins(GitVersioning)
   }
