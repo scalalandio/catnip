@@ -73,15 +73,15 @@ span.hljs-tag, span.hljs-symbol{
   <div style="margin: 0px;color: #333;text-align: center;padding: 2.5em 2em 0;border-bottom: 1px solid #eee;display: block;" id="Usage" class=" scalatex-site-Styles-hoverContainer scalatex-site-Styles-headerTag"><h1 style="margin: 0.2em 0;font-size: 3em;font-weight: 300;">Usage<a class=" scalatex-site-Styles-headerLink" href="#Usage" style="position: absolute;right: 0px;"><i class="fa fa-link"></i></a></h1><br /></div>
     <p>
       Add to your sbt (2.11, 2.12):</p>
-    <pre><code class="scala scalatex-site-Styles-highlightMe">libraryDependencies += &quot;io.scalaland&quot; %% &quot;catnip&quot; % &quot;0.5.1&quot;
+    <pre><code class="scala scalatex-site-Styles-highlightMe">libraryDependencies += &quot;io.scalaland&quot; %% &quot;catnip&quot; % &quot;1.0.0&quot;
 addCompilerPlugin(&quot;org.scalamacros&quot; % &quot;paradise&quot; % &quot;2.1.1&quot; cross sbt.CrossVersion.patch)</code></pre>
     <p>
       or, if you use Scala.js:</p>
-    <pre><code class="scala scalatex-site-Styles-highlightMe">libraryDependencies += &quot;io.scalaland&quot; %%% &quot;catnip&quot; % &quot;0.5.1&quot;
+    <pre><code class="scala scalatex-site-Styles-highlightMe">libraryDependencies += &quot;io.scalaland&quot; %%% &quot;catnip&quot; % &quot;1.0.0&quot;
 addCompilerPlugin(&quot;org.scalamacros&quot; % &quot;paradise&quot; % &quot;2.1.1&quot; cross sbt.CrossVersion.patch)</code></pre>
     <p>
       or with Scala 2.13.0-M4 (JVM-only due to a Scala.js compiler bug):</p>
-    <pre><code class="scala scalatex-site-Styles-highlightMe">libraryDependencies += &quot;io.scalaland&quot; %% &quot;catnip&quot; % &quot;0.5.1&quot;
+    <pre><code class="scala scalatex-site-Styles-highlightMe">libraryDependencies += &quot;io.scalaland&quot; %% &quot;catnip&quot; % &quot;1.0.0&quot;
 scalacOptions += &quot;-Ymacro-annotations&quot;</code></pre>
     <p>
       From now on you can add implicit Kittens-generated type classes for your case classes
@@ -89,6 +89,7 @@ scalacOptions += &quot;-Ymacro-annotations&quot;</code></pre>
     <pre><code class="scala scalatex-site-Styles-highlightMe">import io.scalaland.catnip._
 import cats._
 import cats.implicits._ // don't forget to import the right implicits!
+import alleycats.std.all._ // might also come handy
 
 @Semi(Eq, Monoid, Show) final case class Test(a: String)
 
@@ -97,7 +98,7 @@ Test(&quot;a&quot;) |+| Test(&quot;b&quot;) // Test(&quot;ab&quot;)
 Test(&quot;a&quot;).show          // &quot;Test(a = a)&quot;</code></pre>
     <p>
       You can also test it with ammonite like:</p>
-    <pre><code class="scala scalatex-site-Styles-highlightMe">import $ivy.`io.scalaland::catnip:0.5.1`, io.scalaland.catnip._, cats._, cats.implicits._
+    <pre><code class="scala scalatex-site-Styles-highlightMe">import $ivy.`io.scalaland::catnip:1.0.0`, io.scalaland.catnip._, cats._, cats.implicits._
 interp.load.plugin.ivy(&quot;org.scalamacros&quot; % &quot;paradise_2.12.4&quot; % &quot;2.1.1&quot;)
 
 @Semi(Eq, Monoid, Functor) final case class Test[A](a: A)
@@ -107,10 +108,10 @@ Test(&quot;a&quot;) |+| Test(&quot;b&quot;) // Test(&quot;ab&quot;)
 Test(&quot;1&quot;).map(_.toInt)  // Test(1)
 </code></pre>
   <div style="margin: 0px;color: #333;text-align: center;padding: 2.5em 2em 0;border-bottom: 1px solid #eee;display: block;" id="Implemented" class=" scalatex-site-Styles-hoverContainer scalatex-site-Styles-headerTag"><h1 style="margin: 0.2em 0;font-size: 3em;font-weight: 300;">Implemented<a class=" scalatex-site-Styles-headerLink" href="#Implemented" style="position: absolute;right: 0px;"><i class="fa fa-link"></i></a></h1><br /></div>
-    <code>cats.Eq</code>, <code>cats.PartialOrder</code>, <code>cats.Order</code>, <code>cats.Hash</code>,
+    <code>cats.Eq</code>, <code>cats.PartialOrder</code>, <code>cats.Order</code>,
     <code>cats.Functor</code>, <code>cats.Foldable</code>, <code>cats.Traverse</code>, <code>cats.Show</code>,
     <code>cats.derived.ShowPretty</code>, <code>cats.Monoid</code>, <code>cats.MonoidK</code>,
-    <code>cats.Semigroup</code>, <code>cats.SemigroupK</code>, <code>alleycats.Empty</code>.
+    <code>cats.Semigroup</code>, <code>cats.SemigroupK</code>, <code>alleycats.Empty</code>, <code>alleycats.Pure</code>.
 
   <div style="margin: 0px;color: #333;text-align: center;padding: 2.5em 2em 0;border-bottom: 1px solid #eee;display: block;" id="Internals" class=" scalatex-site-Styles-hoverContainer scalatex-site-Styles-headerTag"><h1 style="margin: 0.2em 0;font-size: 3em;font-weight: 300;">Internals<a class=" scalatex-site-Styles-headerLink" href="#Internals" style="position: absolute;right: 0px;"><i class="fa fa-link"></i></a></h1><br /></div>
     <p>
@@ -180,4 +181,4 @@ object TestSemiK {
         );
       })
     })
-  </script></body></html>                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          
+  </script></body></html>                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                
