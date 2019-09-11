@@ -1,6 +1,8 @@
 package io.scalaland.catnip
 
 import cats.implicits._
+import alleycats.std.all._
+
 import org.specs2.mutable.Specification
 
 class SemiSpec extends Specification {
@@ -140,6 +142,7 @@ class SemiSpec extends Specification {
     }
 
     /*
+    // TODO: https://github.com/scalalandio/catnip/issues/9
     "generate for cats.Hash" in {
       // given
       @Semi(cats.Hash) final case class TestHash(a: String)
@@ -151,7 +154,7 @@ class SemiSpec extends Specification {
       // then
       result1 must not(beEqualTo(result2))
     }
-     */
+    */
 
     @Semi(cats.Functor) final case class TestFunctor[A](a: A, b: A)
     "generate for cats.Functor" in {
@@ -297,6 +300,19 @@ class SemiSpec extends Specification {
 
       // then
       result must beEqualTo(TestEmpty(""))
+    }
+
+    @Semi(alleycats.Pure) final case class TestPure[A](a: A)
+    "generate for alleycats.Pure" in {
+      // given
+      // test class moved outside as a workaround for error in 2.11:
+      //   can't existentially abstract over parameterized type TestPure[String]
+
+      // when
+      val result = alleycats.Pure[TestPure].pure("")
+
+      // then
+      result must beEqualTo(TestPure(""))
     }
   }
 }

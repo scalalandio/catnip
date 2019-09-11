@@ -64,7 +64,7 @@ Test("1").map(_.toInt)  // Test(1)
 `cats.Eq`, `cats.PartialOrder`, `cats.Order`,
 `cats.Functor`, `cats.Foldable`, `cats.Traverse`, `cats.Show`, `cats.derived.ShowPretty`,
 `cats.Monoid`, `cats.MonoidK`, `cats.Semigroup`, `cats.SemigroupK`,
-`alleycats.Empty`.
+`alleycats.Empty`, `alleycats.Pure`.
 
 ## Internals
 

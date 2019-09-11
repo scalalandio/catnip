@@ -65,7 +65,7 @@
     @code{cats.Eq}, @code{cats.PartialOrder}, @code{cats.Order},
     @code{cats.Functor}, @code{cats.Foldable}, @code{cats.Traverse}, @code{cats.Show},
     @code{cats.derived.ShowPretty}, @code{cats.Monoid}, @code{cats.MonoidK},
-    @code{cats.Semigroup}, @code{cats.SemigroupK}, @code{alleycats.Empty}.
+    @code{cats.Semigroup}, @code{cats.SemigroupK}, @code{alleycats.Empty}, @code{alleycats.Pure}.
 
   @sect{Internals}
     @p
