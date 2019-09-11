@@ -9,15 +9,15 @@ object Dependencies {
 
   // scala version
   val scalaOrganization  = "org.scala-lang" // "org.typelevel"
-  val scalaVersion       = "2.12.8" // "2.12.4-bin-typelevel-4"
-  val crossScalaVersions = Seq("2.11.12", "2.12.8", "2.13.0")
+  val scalaVersion       = "2.12.9" // "2.12.4-bin-typelevel-4"
+  val crossScalaVersions = Seq("2.11.12", "2.12.9", "2.13.0")
 
   // build tools version
   val scalaFmtVersion = "1.5.1"
 
   // libraries versions
-  val catsVersion     = "1.6.0"
-  val specs2Version   = "4.4.1"
+  val catsVersion     = "2.0.0"
+  val specs2Version   = "4.6.0"
 
   // resolvers
   val resolvers = Seq(
@@ -27,7 +27,7 @@ object Dependencies {
 
   val alleyCats          = libraryDependencies += "org.typelevel"   %%% "alleycats-core"    % catsVersion
   val cats               = libraryDependencies += "org.typelevel"   %%% "cats-core"         % catsVersion
-  val kittens            = libraryDependencies += "org.typelevel"   %%% "kittens"           % "1.2.1"
+  val kittens            = libraryDependencies += "org.typelevel"   %%% "kittens"           % "2.0.0"
   val shapeless          = libraryDependencies += "com.chuusai"     %%% "shapeless"         % "2.3.3"
 }
 

@@ -139,6 +139,7 @@ class SemiSpec extends Specification {
       result2 must beEqualTo(TestO("b"))
     }
 
+    /*
     "generate for cats.Hash" in {
       // given
       @Semi(cats.Hash) final case class TestHash(a: String)
@@ -150,6 +151,7 @@ class SemiSpec extends Specification {
       // then
       result1 must not(beEqualTo(result2))
     }
+     */
 
     @Semi(cats.Functor) final case class TestFunctor[A](a: A, b: A)
     "generate for cats.Functor" in {

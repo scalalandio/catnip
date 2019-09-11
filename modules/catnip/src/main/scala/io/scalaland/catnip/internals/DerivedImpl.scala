@@ -4,6 +4,7 @@ import scala.language.experimental.macros
 import scala.reflect.macros.whitebox.Context
 import scala.util.{ Failure, Success, Try }
 
+@SuppressWarnings(Array("org.wartremover.warts.StringPlusAny"))
 private[catnip] class DerivedImpl(config: Map[String, (String, List[String])])(val c: Context)(annottees: Seq[Any])
     extends Loggers {
 
@@ -124,7 +125,7 @@ private[catnip] object DerivedImpl {
     } match {
       case Success(value) => Right(value)
       case Failure(_: java.util.NoSuchElementException) =>
-        Left(s"Unable to load $name using ${getClass.getClassLoader}")
+        Left(s"Unable to load $name using ${getClass.getClassLoader.toString}")
       case Failure(err: Throwable) => Left(err.getMessage)
     }
 

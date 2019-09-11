@@ -83,6 +83,14 @@ object Settings extends Dependencies {
         // removed in 2.13.x
         "-Yno-adapted-args",
         "-Ypartial-unification",
+        "-Ywarn-inaccessible",
+        "-Ywarn-infer-any",
+        "-Ywarn-nullary-override",
+        "-Ywarn-nullary-unit",
+        "-Xlint:by-name-right-associative",
+        "-Xlint:unsound-match",
+        // deprecated in 2.13.x
+        "-Xfuture",
         // only for 2.11.x
         "-Xexperimental"
       ) else if (scalaVersion.value.startsWith("2.12")) Set(
@@ -138,7 +146,10 @@ object Settings extends Dependencies {
       Wart.Nothing,
       Wart.ToString
     )
-  ) ++ mainDeps ++ Seq(libraryDependencies ++= (if (!scalaVersion.value.startsWith("2.13")) {
+  ) ++ mainDeps ++ Seq(
+    libraryDependencies += "org.scala-lang" % "scala-reflect" % scalaVersion.value % "provided",
+    libraryDependencies += "org.scala-lang" % "scala-compiler" % scalaVersion.value % "provided"
+  ) ++ Seq(libraryDependencies ++= (if (!scalaVersion.value.startsWith("2.13")) {
     Seq(compilerPlugin("org.scalamacros" % "paradise" % "2.1.1" cross sbt.CrossVersion.patch))
   } else {
     Nil

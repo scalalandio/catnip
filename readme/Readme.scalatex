@@ -24,17 +24,17 @@
     @p
       Add to your sbt (2.11, 2.12):
     @hl.scala
-      libraryDependencies += "io.scalaland" %% "catnip" % "0.5.1"
+      libraryDependencies += "io.scalaland" %% "catnip" % "1.0.0"
       addCompilerPlugin("org.scalamacros" % "paradise" % "2.1.1" cross sbt.CrossVersion.patch)
     @p
       or, if you use Scala.js:
     @hl.scala
-      libraryDependencies += "io.scalaland" %%% "catnip" % "0.5.1"
+      libraryDependencies += "io.scalaland" %%% "catnip" % "1.0.0"
       addCompilerPlugin("org.scalamacros" % "paradise" % "2.1.1" cross sbt.CrossVersion.patch)
     @p
       or with Scala 2.13.0-M4 (JVM-only due to a Scala.js compiler bug):
     @hl.scala
-      libraryDependencies += "io.scalaland" %% "catnip" % "0.5.1"
+      libraryDependencies += "io.scalaland" %% "catnip" % "1.0.0"
       scalacOptions += "-Ymacro-annotations"
     @p
       From now on you can add implicit Kittens-generated type classes for your case classes
@@ -52,7 +52,7 @@
     @p
       You can also test it with ammonite like:
     @hl.scala
-      import $ivy.`io.scalaland::catnip:0.5.1`, io.scalaland.catnip._, cats._, cats.implicits._
+      import $ivy.`io.scalaland::catnip:1.0.0`, io.scalaland.catnip._, cats._, cats.implicits._
       interp.load.plugin.ivy("org.scalamacros" % "paradise_2.12.4" % "2.1.1")
 
       @@Semi(Eq, Monoid, Functor) final case class Test[A](a: A)
