@@ -5,8 +5,6 @@ scala:
               - 2.13.0
 jdk:
               - openjdk8
-              - oraclejdk8
-dist:           trusty
 cache:
               - "~/.ivy2"
               - "~/.sbt"
@@ -14,8 +12,8 @@ install:
               - sudo apt-get update
               - sudo apt-get install zsh
               - sudo chmod +x scripts/*
-              - ./sbt update
-script:         ./sbt test
+              - ./sbt ++$TRAVIS_SCALA_VERSION update
+script:         ./sbt ++$TRAVIS_SCALA_VERSION test
 after_script:
               - scripts/prepare-test-results-for-ci.sh
               - find $HOME/.sbt -name "*.lock" | xargs rm
