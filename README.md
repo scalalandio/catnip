@@ -48,7 +48,7 @@ Test("a").show          // "Test(a = a)"
 You can also test it with ammonite like:
 
 ```scala
-import $ivy.`io.scalaland::catnip:0.5.1`, io.scalaland.catnip._, cats._, cats.implicits._
+import $ivy.`io.scalaland::catnip:1.0.0`, io.scalaland.catnip._, cats._, cats.implicits._
 interp.load.plugin.ivy("org.scalamacros" % "paradise_2.12.4" % "2.1.1")
 
 @Semi(Eq, Monoid, Functor) final case class Test[A](a: A)
@@ -60,7 +60,7 @@ Test("1").map(_.toInt)  // Test(1)
 
 ## Implemented
 
-`cats.Eq`, `cats.PartialOrder`, `cats.Order`, `cats.Hash`,
+`cats.Eq`, `cats.PartialOrder`, `cats.Order`,
 `cats.Functor`, `cats.Foldable`, `cats.Traverse`, `cats.Show`, `cats.derived.ShowPretty`,
 `cats.Monoid`, `cats.MonoidK`, `cats.Semigroup`, `cats.SemigroupK`,
 `alleycats.Empty`.
