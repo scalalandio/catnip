@@ -38,6 +38,7 @@ with a simple macro-annotation:
 import io.scalaland.catnip._
 import cats._
 import cats.implicits._ // don't forget to import the right implicits!
+import alleycats.std.all._ // might also come handy
 
 @Semi(Eq, Monoid, Show) final case class Test(a: String)
 

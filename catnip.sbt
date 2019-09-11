@@ -12,7 +12,7 @@ lazy val root = project.root
 lazy val catnip = crossProject(JVMPlatform, JSPlatform).crossType(CrossType.Pure).build.from("catnip")
   .setName("catnip")
   .setDescription("Macro annotations for Kittens library")
-  .setInitialImport("cats.implicits._")
+  .setInitialImport("cats.implicits._, alleycats.std.all._")
   .configureModule
   .publish
 
@@ -24,7 +24,7 @@ lazy val catnipJS  = catnip.js
 lazy val catnipTests = crossProject(JVMPlatform, JSPlatform).crossType(CrossType.Pure).build.from("catnip-tests")
   .setName("catnip-tests")
   .setDescription("Catnip tests")
-  .setInitialImport("cats.implicits._")
+  .setInitialImport("cats.implicits._, alleycats.std.all._")
   .dependsOn(catnip)
   .configureModule
   .configureTests()
