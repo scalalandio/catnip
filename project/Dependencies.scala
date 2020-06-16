@@ -1,23 +1,28 @@
 import sbt._
-import sbt.Keys.libraryDependencies
+import sbt.Keys.{
+  scalaBinaryVersion,
+  libraryDependencies
+}
 import Dependencies._
 import sbtcrossproject.CrossProject
 import sbtcrossproject.CrossPlugin.autoImport._
 import org.portablescala.sbtplatformdeps.PlatformDepsPlugin.autoImport._
+import org.scalajs.sbtplugin.ScalaJSPlugin.autoImport.scalaJSVersion
 
 object Dependencies {
 
   // scala version
   val scalaOrganization  = "org.scala-lang" // "org.typelevel"
-  val scalaVersion       = "2.12.9" // "2.12.4-bin-typelevel-4"
-  val crossScalaVersions = Seq("2.11.12", "2.12.9", "2.13.0")
+  val scalaVersion       = "2.13.2" // "2.12.4-bin-typelevel-4"
+  val crossScalaVersions = Seq("2.13.2", "2.12.11", "2.11.12")
 
   // build tools version
   val scalaFmtVersion = "1.5.1"
 
   // libraries versions
-  val catsVersion     = "2.0.0"
-  val specs2Version   = "4.6.0"
+  val catsVersion     = Def.setting(if (scalaBinaryVersion.value == "2.11") "2.0.0" else "2.1.1")
+  val kittensVersion  = Def.setting(if (scalaJSVersion.startsWith("0.6.")) "2.0.0" else "2.1.0")
+  val specs2Version   = Def.setting(if (scalaJSVersion.startsWith("0.6.")) "4.8.3" else "4.9.4")
 
   // resolvers
   val resolvers = Seq(
@@ -25,9 +30,9 @@ object Dependencies {
     Resolver typesafeRepo "releases"
   )
 
-  val alleyCats          = libraryDependencies += "org.typelevel"   %%% "alleycats-core"    % catsVersion
-  val cats               = libraryDependencies += "org.typelevel"   %%% "cats-core"         % catsVersion
-  val kittens            = libraryDependencies += "org.typelevel"   %%% "kittens"           % "2.0.0"
+  val alleyCats          = libraryDependencies += "org.typelevel"   %%% "alleycats-core"    % catsVersion.value
+  val cats               = libraryDependencies += "org.typelevel"   %%% "cats-core"         % catsVersion.value
+  val kittens            = libraryDependencies += "org.typelevel"   %%% "kittens"           % kittensVersion.value
   val shapeless          = libraryDependencies += "com.chuusai"     %%% "shapeless"         % "2.3.3"
 }
 

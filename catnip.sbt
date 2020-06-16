@@ -30,8 +30,8 @@ lazy val catnipTests = crossProject(JVMPlatform, JSPlatform).crossType(CrossType
   .configureTests()
   .noPublish
   .settings(libraryDependencies ++= Seq(
-    "org.specs2" %%% "specs2-core"       % Dependencies.specs2Version % "test",
-    "org.specs2" %%% "specs2-scalacheck" % Dependencies.specs2Version % "test"
+    "org.specs2" %%% "specs2-core"       % Dependencies.specs2Version.value % "test",
+    "org.specs2" %%% "specs2-scalacheck" % Dependencies.specs2Version.value % "test"
   ))
 
 lazy val catnipTestsJVM = catnipTests.jvm

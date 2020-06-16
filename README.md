@@ -1,8 +1,8 @@
 # catnip
 
 [![Build Status](https://travis-ci.org/scalalandio/catnip.svg?branch=master)](https://travis-ci.org/scalalandio/catnip)
-[![Maven Central](https://img.shields.io/maven-central/v/io.scalaland/catnip_2.12.svg)](http://search.maven.org/#search%7Cga%7C1%7Ccatnip)
-[![Scala.js](https://www.scala-js.org/assets/badges/scalajs-0.6.17.svg)](https://www.scala-js.org)
+[![Maven Central](https://img.shields.io/maven-central/v/io.scalaland/catnip_2.13.svg)](http://search.maven.org/#search%7Cga%7C1%7Ccatnip)
+[![Scala.js](https://www.scala-js.org/assets/badges/scalajs-1.0.0.svg)](https://www.scala-js.org)
 [![License](http://img.shields.io/:license-Apache%202-green.svg)](http://www.apache.org/licenses/LICENSE-2.0.txt)
 
 Static annotations for Kittens for people who don't like to write
@@ -10,10 +10,13 @@ semiautomatic derivations into companion objects themselves.
 
 ## Usage
 
-Add to your sbt (2.11, 2.12):
+Add to your sbt (2.11, 2.12, 2.13):
 
 ```scala
 libraryDependencies += "io.scalaland" %% "catnip" % catnipVersion // see Maven badge
+// If you use Scala >= 2.13:
+scalacOptions += "-Ymacro-annotations"
+// If you use Scala 2.12 or 2.11:
 addCompilerPlugin("org.scalamacros" % "paradise" % "2.1.1" cross sbt.CrossVersion.patch)
 ```
 
@@ -21,14 +24,10 @@ or, if you use Scala.js:
 
 ```scala
 libraryDependencies += "io.scalaland" %%% "catnip" % catnipVersion // see Maven badge
-addCompilerPlugin("org.scalamacros" % "paradise" % "2.1.1" cross sbt.CrossVersion.patch)
-```
-
-or with Scala 2.13.0-M4 (JVM-only due to a Scala.js compiler bug):
-
-```scala
-libraryDependencies += "io.scalaland" %% "catnip" % catnipVersion // see Maven badge
+// If you use Scala >= 2.13:
 scalacOptions += "-Ymacro-annotations"
+// If you use Scala 2.12 or 2.11:
+addCompilerPlugin("org.scalamacros" % "paradise" % "2.1.1" cross sbt.CrossVersion.patch)
 ```
 
 From now on you can add implicit Kittens-generated type classes for your case classes
@@ -50,8 +49,11 @@ Test("a").show          // "Test(a = a)"
 You can also test it with ammonite like:
 
 ```scala
+interp.preConfigureCompiler(_.processArguments(List("-Ymacro-annotations"), true))
+
+@
+
 import $ivy.`io.scalaland::catnip:1.0.0`, io.scalaland.catnip._, cats._, cats.implicits._
-interp.load.plugin.ivy("org.scalamacros" % "paradise_2.12.4" % "2.1.1")
 
 @Semi(Eq, Monoid, Functor) final case class Test[A](a: A)
 
@@ -123,6 +125,6 @@ import cats.{ Eq => X }
 @Semi(X) final case class Test(a: String)
 // scala.reflect.macros.TypecheckException: not found: type X
 ```
-   
+
 However, if you simply import definitions or aliases already defined somewhere else,
 you should have no issues.
