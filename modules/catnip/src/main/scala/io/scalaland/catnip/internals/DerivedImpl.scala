@@ -118,49 +118,49 @@ private[catnip] class DerivedImpl(mappings: Map[String, Config], stubs: Map[Stri
   }
 }
 
-private[catnip] object DerivedImpl {
+private[catnip] object DerivedImpl extends Loggers {
 
   final case class Config(target: String, arguments: List[String])
 
-  private def loadConfig(name: String): ValidatedNel[String, Map[String, Config]] = {
-    val configFiles = getClass.getClassLoader.getResources(name)
-    Iterator
-      .continually {
-        if (configFiles.hasMoreElements) Some(configFiles.nextElement())
-        else None
+  private def loadConfig(name: String): ValidatedNel[String, Map[String, Config]] =
+    withTraceLog(s"Configs found for $name") {
+      val configFiles = getClass.getClassLoader.getResources(name)
+      Iterator
+        .continually {
+          if (configFiles.hasMoreElements) Some(configFiles.nextElement())
+          else None
+        }
+        .takeWhile(_.isDefined)
+        .collect { case Some(value) => value }
+        .toList
+    }.map { url =>
+        val source = scala.io.Source.fromURL(url)
+        try {
+          Validated.valid(
+            source.getLines()
+              .map(_.trim)
+              .filterNot(_ startsWith raw"""//""")
+              .filterNot(_ startsWith raw"""#""")
+              .filterNot(_.isEmpty)
+              .map { s =>
+                val kv                           = s.split('=')
+                val typeClass                    = kv(0)
+                val generator :: otherRequiredTC = kv(1).split(',').toList
+                typeClass.trim -> (Config(generator, otherRequiredTC))
+              }
+              .toMap
+          )
+        } catch {
+          case _: java.util.NoSuchElementException =>
+            Validated.invalidNel(s"Unable to load $name using ${getClass.getClassLoader.toString} - failed at $url")
+          case err: Throwable =>
+            Validated.invalidNel(err.getMessage)
+        } finally {
+          source.close()
+        }
       }
-      .takeWhile(_.isDefined)
-      .collect {
-        case Some(url) =>
-          val source = scala.io.Source.fromURL(url)
-          try {
-            Validated.valid(
-              source.getLines
-                .map(_.trim)
-                .filterNot(_ startsWith raw"""//""")
-                .filterNot(_ startsWith raw"""#""")
-                .filterNot(_.isEmpty)
-                .map { s =>
-                  val kv                           = s.split('=')
-                  val typeClass                    = kv(0)
-                  val generator :: otherRequiredTC = kv(1).split(',').toList
-                  typeClass.trim -> (Config(generator, otherRequiredTC))
-                }
-                .toMap
-            )
-          } catch {
-            case _: java.util.NoSuchElementException =>
-              Validated.invalidNel(s"Unable to load $name using ${getClass.getClassLoader.toString} - failed at $url")
-            case err: Throwable =>
-              Validated.invalidNel(err.getMessage)
-          } finally {
-            source.close()
-          }
-      }
-      .toList
       .sequence
       .map(_.fold(Map.empty[String, Config])(_ ++ _))
-  }
 
   private val mappingsE: ValidatedNel[String, Map[String, Config]] = loadConfig("derive.semi.conf")
   private val stubsE:    ValidatedNel[String, Map[String, Config]] = loadConfig("derive.stub.conf")
@@ -168,7 +168,18 @@ private[catnip] object DerivedImpl {
   def impl(c: Context)(annottees: Seq[c.Expr[Any]]): c.Expr[Any] =
     (mappingsE, stubsE).tupled match {
       case Validated.Valid((mappings, stubs)) =>
-        new DerivedImpl(mappings, stubs)(c)(annottees).derive().asInstanceOf[c.Expr[Any]]
+        new DerivedImpl(
+          mappings.withDefault { key =>
+            throw new NoSuchElementException(
+              s"No semi definition found for a type class $key, available:\n${mappings.mkString("\n")}"
+            )
+          },
+          stubs.withDefault { key =>
+            throw new NoSuchElementException(
+              s"No stub definition found for object $key, available:\n${stubs.mkString("\n")}"
+            )
+          }
+        )(c)(annottees).derive().asInstanceOf[c.Expr[Any]]
       case Validated.Invalid(errors) => c.abort(c.enclosingPosition, errors.mkString_("\n"))
     }
 }
