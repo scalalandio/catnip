@@ -47,6 +47,7 @@ lazy val readme = scalatex.ScalatexReadme(
   .noPublish
   .enablePlugins(GhpagesPlugin)
   .settings(
+    scalaVersion := "2.12.11", // there is no ScalaTex for 2.13
     siteSourceDirectory := target.value / "scalatex",
     git.remoteRepo := "git@github.com:scalalandio/catnip.git",
     Jekyll / makeSite / includeFilter := new FileFilter { def accept(p: File) = true }
@@ -54,4 +55,3 @@ lazy val readme = scalatex.ScalatexReadme(
 
 addCommandAlias("fullTest", ";test;scalastyle")
 addCommandAlias("fullCoverageTest", ";coverage;test;coverageReport;coverageAggregate;scalastyle")
-addCommandAlias("relock", ";unlock;reload;update;lock")
