@@ -13,8 +13,8 @@ object Dependencies {
 
   // scala version
   val scalaOrganization  = "org.scala-lang" // "org.typelevel"
-  val scalaVersion       = "2.13.2" // "2.12.4-bin-typelevel-4"
-  val crossScalaVersions = Seq("2.13.2", "2.12.11", "2.11.12")
+  val scalaVersion       = "2.13.3" // "2.12.4-bin-typelevel-4"
+  val crossScalaVersions = Seq("2.13.3 ", "2.12.11", "2.11.12")
 
   // build tools version
   val scalaFmtVersion = "1.5.1"
@@ -22,7 +22,7 @@ object Dependencies {
   // libraries versions
   val catsVersion     = Def.setting(if (scalaBinaryVersion.value == "2.11") "2.0.0" else "2.1.1")
   val kittensVersion  = Def.setting(if (scalaJSVersion.startsWith("0.6.")) "2.0.0" else "2.1.0")
-  val specs2Version   = Def.setting(if (scalaJSVersion.startsWith("0.6.")) "4.8.3" else "4.9.4")
+  val specs2Version   = Def.setting(if (scalaJSVersion.startsWith("0.6.")) "4.8.3" else "4.10.3")
 
   // resolvers
   val resolvers = Seq(

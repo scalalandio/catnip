@@ -135,7 +135,7 @@ private[catnip] object DerivedImpl {
           val source = scala.io.Source.fromURL(url)
           try {
             Validated.valid(
-              source.getLines
+              source.getLines()
                 .map(_.trim)
                 .filterNot(_ startsWith raw"""//""")
                 .filterNot(_ startsWith raw"""#""")

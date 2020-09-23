@@ -87,6 +87,7 @@ object Settings extends Dependencies {
         "-Ywarn-nullary-override",
         "-Ywarn-nullary-unit",
         "-Xlint:by-name-right-associative",
+        "-Xlint:nullary-override",
         "-Xlint:unsound-match",
         // deprecated in 2.13.x
         "-Xfuture",
