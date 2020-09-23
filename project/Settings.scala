@@ -7,7 +7,6 @@ import com.lucidchart.sbt.scalafmt.ScalafmtCorePlugin.autoImport._
 import org.scalastyle.sbt.ScalastylePlugin.autoImport._
 import sbtcrossproject.CrossProject
 import scoverage._
-import wartremover._
 
 object Settings extends Dependencies {
 
@@ -131,21 +130,7 @@ object Settings extends Dependencies {
 
     Compile / scalafmtOnCompile := true,
 
-    scalastyleFailOnError := true,
-
-    Compile / compile / wartremoverWarnings ++= Warts.allBut(
-      Wart.Any,
-      Wart.AsInstanceOf,
-      Wart.DefaultArguments,
-      Wart.ExplicitImplicitTypes,
-      Wart.ImplicitConversion,
-      Wart.ImplicitParameter,
-      Wart.Overloading,
-      Wart.PublicInference,
-      Wart.NonUnitStatements,
-      Wart.Nothing,
-      Wart.ToString
-    )
+    scalastyleFailOnError := true
   ) ++ mainDeps ++ Seq(
     libraryDependencies += "org.scala-lang" % "scala-reflect" % scalaVersion.value % "provided",
     libraryDependencies += "org.scala-lang" % "scala-compiler" % scalaVersion.value % "provided"

@@ -1,12 +1,16 @@
 package io.scalaland.catnip.internals
 
+import cats.implicits._
+import cats.data.{ Validated, ValidatedNel }
+import io.scalaland.catnip.internals.DerivedImpl.Config
+
 import scala.language.experimental.macros
 import scala.reflect.macros.whitebox.Context
-import scala.util.{ Failure, Success, Try }
+import scala.util
 
-@SuppressWarnings(Array("org.wartremover.warts.StringPlusAny"))
-private[catnip] class DerivedImpl(config: Map[String, (String, List[String])])(val c: Context)(annottees: Seq[Any])
-    extends Loggers {
+private[catnip] class DerivedImpl(mappings: Map[String, Config], stubs: Map[String, Config])(val c: Context)(
+  annottees:                                Seq[Any]
+) extends Loggers {
 
   import c.universe._
 
@@ -14,7 +18,17 @@ private[catnip] class DerivedImpl(config: Map[String, (String, List[String])])(v
 
   // TODO: there must be a better way to dealias F[_] type
   private def str2TypeConstructor(typeClassName: String): Type =
-    c.typecheck(c.parse(s"null: $typeClassName[Nothing]")).tpe.dealias.typeConstructor
+    util
+      .Try {
+        // allows using "fake" companion object if a type class is missing one, and use it to redirect to the right type
+        val key  = c.typecheck(c.parse(s"null: ${typeClassName}.type")).tpe.dealias.toString
+        val stub = stubs.get(key).orElse(stubs.get(key.substring(0, key.length - ".type".length))).get.target
+        c.typecheck(c.parse(s"null: ${stub}[Nothing]")).tpe.dealias.typeConstructor
+      }
+      .orElse(util.Try {
+        c.typecheck(c.parse(s"null: ${typeClassName}[Nothing]")).tpe.dealias.typeConstructor
+      })
+      .get
 
   private def isParametrized(name: TypeName): String => Boolean =
     s"""(^|[,\\[])$name([,\\]]|$$)""".r.pattern.asPredicate.test _
@@ -27,7 +41,7 @@ private[catnip] class DerivedImpl(config: Map[String, (String, List[String])])(v
         val fType      = str2TypeConstructor(typeClassName.toString)
         val implName   = TermName(s"_derived_${fType.toString.replace('.', '_')}")
         lazy val aType = if (params.nonEmpty) TypeName(tq"$name[..${params.map(_.name)}]".toString) else name
-        val body       = c.parse(s"{ ${config(fType.toString)._1}[$aType] }")
+        val body       = c.parse(s"{ ${mappings(fType.toString).target}[$aType] }")
         val returnType = tq"$fType[$aType]"
         // TODO: figure out, why this doesn't work
         // q"""implicit val $implName: $returnType = $body""": ValDef
@@ -38,8 +52,8 @@ private[catnip] class DerivedImpl(config: Map[String, (String, List[String])])(v
                   with ..$_ { $_ => ..$_ }""" =>
       withTraceLog(s"Derivation expanded for $name class") {
         val fType       = str2TypeConstructor(typeClassName.toString)
-        val otherReqTCs = config(fType.toString)._2.map(str2TypeConstructor)
-        val needKind    = scala.util.Try(c.typecheck(c.parse(s"null: $fType[List]"))).isSuccess
+        val otherReqTCs = mappings(fType.toString).arguments.map(str2TypeConstructor)
+        val needKind    = util.Try(c.typecheck(c.parse(s"null: $fType[List]"))).isSuccess
         val implName    = TermName(s"_derived_${fType.toString.replace('.', '_')}")
         lazy val aType  = TypeName(if (params.nonEmpty) tq"$name[..${params.map(_.name)}]".toString else name.toString)
         lazy val argTypes =
@@ -58,7 +72,7 @@ private[catnip] class DerivedImpl(config: Map[String, (String, List[String])])(v
           }
           .mkString("")
         val tcForType  = if (needKind) name else aType
-        val body       = c.parse(s"{ $suppressUnused${config(fType.toString)._1}[$tcForType] }")
+        val body       = c.parse(s"{ $suppressUnused${mappings(fType.toString).target}[$tcForType] }")
         val returnType = tq"$fType[$tcForType]"
         // TODO: figure out, why this doesn't work
         // if (usedParams.isEmpty) q"""implicit val $implName: $returnType = $body""":                   ValDef
@@ -106,34 +120,55 @@ private[catnip] class DerivedImpl(config: Map[String, (String, List[String])])(v
 
 private[catnip] object DerivedImpl {
 
-  private def loadConfig(name: String): Either[String, Map[String, (String, List[String])]] =
-    Try {
-      scala.io.Source
-        .fromURL(getClass.getClassLoader.getResources(name).nextElement)
-        .getLines
-        .map(_.trim)
-        .filterNot(_ startsWith """////""")
-        .filterNot(_ startsWith """#""")
-        .filterNot(_.isEmpty)
-        .map { s =>
-          val kv                           = s.split('=')
-          val typeClass                    = kv(0)
-          val generator :: otherRequiredTC = kv(1).split(',').toList
-          typeClass.trim -> (generator -> otherRequiredTC)
-        }
-        .toMap
-    } match {
-      case Success(value) => Right(value)
-      case Failure(_: java.util.NoSuchElementException) =>
-        Left(s"Unable to load $name using ${getClass.getClassLoader.toString}")
-      case Failure(err: Throwable) => Left(err.getMessage)
-    }
+  final case class Config(target: String, arguments: List[String])
 
-  private val mappingsE: Either[String, Map[String, (String, List[String])]] = loadConfig("derive.semi.conf")
+  private def loadConfig(name: String): ValidatedNel[String, Map[String, Config]] = {
+    val configFiles = getClass.getClassLoader.getResources(name)
+    Iterator
+      .continually {
+        if (configFiles.hasMoreElements) Some(configFiles.nextElement())
+        else None
+      }
+      .takeWhile(_.isDefined)
+      .collect {
+        case Some(url) =>
+          val source = scala.io.Source.fromURL(url)
+          try {
+            Validated.valid(
+              source.getLines
+                .map(_.trim)
+                .filterNot(_ startsWith raw"""//""")
+                .filterNot(_ startsWith raw"""#""")
+                .filterNot(_.isEmpty)
+                .map { s =>
+                  val kv                           = s.split('=')
+                  val typeClass                    = kv(0)
+                  val generator :: otherRequiredTC = kv(1).split(',').toList
+                  typeClass.trim -> (Config(generator, otherRequiredTC))
+                }
+                .toMap
+            )
+          } catch {
+            case _: java.util.NoSuchElementException =>
+              Validated.invalidNel(s"Unable to load $name using ${getClass.getClassLoader.toString} - failed at $url")
+            case err: Throwable =>
+              Validated.invalidNel(err.getMessage)
+          } finally {
+            source.close()
+          }
+      }
+      .toList
+      .sequence
+      .map(_.fold(Map.empty[String, Config])(_ ++ _))
+  }
+
+  private val mappingsE: ValidatedNel[String, Map[String, Config]] = loadConfig("derive.semi.conf")
+  private val stubsE:    ValidatedNel[String, Map[String, Config]] = loadConfig("derive.stub.conf")
 
   def impl(c: Context)(annottees: Seq[c.Expr[Any]]): c.Expr[Any] =
-    mappingsE match {
-      case Right(mappings) => new DerivedImpl(mappings)(c)(annottees).derive().asInstanceOf[c.Expr[Any]]
-      case Left(error) => c.abort(c.enclosingPosition, error)
+    (mappingsE, stubsE).tupled match {
+      case Validated.Valid((mappings, stubs)) =>
+        new DerivedImpl(mappings, stubs)(c)(annottees).derive().asInstanceOf[c.Expr[Any]]
+      case Validated.Invalid(errors) => c.abort(c.enclosingPosition, errors.mkString_("\n"))
     }
 }
