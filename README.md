@@ -126,6 +126,15 @@ to sbt. This will make your customizations immediately available to your modules
 Take a look at an [example](modules/catnip-custom-example) project to see how it works
 in practice.
 
+## Debugging
+
+To debug you can use `catnip.debug` flag:
+
+```
+> sbt -Dcatnip.debug=debug # show info about derivation
+> sbt -Dcatnip.debug=trace # show even more infor about derivation
+```
+
 ## Limitations
 
 Type checker complains if you use type aliases from the same compilation unit
