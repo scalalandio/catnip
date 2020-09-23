@@ -110,6 +110,9 @@ the content of `derive.semi.conf`. (Some merge strategy for resources I guess?
 That and making sure that compiler _sees_ the resources, since if you define them
 in the same project you want compiler to use them it is not the case).
 
+Take a look at [example](modules/catnip-custom-example) project to see how it works
+in practice.
+
 ## Limitations
 
 Type checker complains if you use type aliases from the same compilation unit
