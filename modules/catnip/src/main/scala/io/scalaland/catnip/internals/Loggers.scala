@@ -1,6 +1,5 @@
 package io.scalaland.catnip.internals
 
-@SuppressWarnings(Array("org.wartremover.warts.StringPlusAny"))
 private[internals] trait Loggers {
 
   sealed abstract class Level(val name: String, val ordinal: Int) extends Product with Serializable {

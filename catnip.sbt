@@ -7,7 +7,7 @@ lazy val root = project.root
   .setDescription("Catnip build")
   .configureRoot
   .noPublish
-  .aggregate(catnipJVM, catnipJS, catnipTestsJVM, catnipTestsJS)
+  .aggregate(catnipJVM, catnipJS, catnipCustomTestsJVM, catnipCustomTestsJS, catnipTestsJVM, catnipTestsJS)
 
 lazy val catnip = crossProject(JVMPlatform, JSPlatform).crossType(CrossType.Pure).build.from("catnip")
   .setName("catnip")
@@ -21,11 +21,24 @@ lazy val catnipJVM = catnip.jvm
 lazy val catnipJS  = catnip.js
   .settings(Compile / unmanagedResourceDirectories += baseDirectory.value / "../src/main/resources")
 
+lazy val catnipCustomTests = crossProject(JVMPlatform, JSPlatform).crossType(CrossType.Pure).build.from("catnip-custom-example")
+  .setName("catnip-custom-example")
+  .setDescription("Example for custom derivation")
+  .setInitialImport("cats.implicits._, alleycats.std.all._")
+  .dependsOn(catnip)
+  .configureModule
+  .noPublish
+
+lazy val catnipCustomTestsJVM = catnipCustomTests.jvm
+  .settings(Compile / unmanagedResourceDirectories += baseDirectory.value / "../src/main/resources")
+lazy val catnipCustomTestsJS  = catnipCustomTests.js
+  .settings(Compile / unmanagedResourceDirectories += baseDirectory.value / "../src/main/resources")
+
 lazy val catnipTests = crossProject(JVMPlatform, JSPlatform).crossType(CrossType.Pure).build.from("catnip-tests")
   .setName("catnip-tests")
   .setDescription("Catnip tests")
   .setInitialImport("cats.implicits._, alleycats.std.all._")
-  .dependsOn(catnip)
+  .dependsOn(catnip, catnipCustomTests)
   .configureModule
   .configureTests()
   .noPublish
