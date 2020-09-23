@@ -105,12 +105,25 @@ In order to do so it:
    (`shapeless.Typeable[A]`), they are defined in config after the generator
    function and separated by commas
 
-Therefore, you should be able to extend the abilities of the macro by expanding
-the content of `derive.semi.conf`. (Some merge strategy for resources I guess?
-That and making sure that compiler _sees_ the resources, since if you define them
-in the same project you want compiler to use them it is not the case).
+## Customizations
 
-Take a look at [example](modules/catnip-custom-example) project to see how it works
+You should be able to extend the abilities of the macro by expanding
+the content of `derive.semi.conf`. You can create this file and add it to your library
+if you want Catnip to support it as all files with that name are looked through during
+compilation. When it comes to sbt it doesn't export resources to `Compile` scope,
+so your configs might not be visible in your modules while they would be available
+in created JARs. (Creating somewhat inconsistent experience).
+Personally, I fixed this by adding something like
+
+```
+val myProject = project.in(file("my-project"))
+  // other settings
+  .settings(Compile / unmanagedResourceDirectories += baseDirectory.value / "../src/main/resources")
+```
+
+to sbt. This will make your customizations immediately available to your modules.
+
+Take a look at an [example](modules/catnip-custom-example) project to see how it works
 in practice.
 
 ## Limitations
