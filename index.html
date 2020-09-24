@@ -73,15 +73,15 @@ span.hljs-tag, span.hljs-symbol{
   <div style="margin: 0px;color: #333;text-align: center;padding: 2.5em 2em 0;border-bottom: 1px solid #eee;display: block;" id="Usage" class=" scalatex-site-Styles-hoverContainer scalatex-site-Styles-headerTag"><h1 style="margin: 0.2em 0;font-size: 3em;font-weight: 300;">Usage<a class=" scalatex-site-Styles-headerLink" href="#Usage" style="position: absolute;right: 0px;"><i class="fa fa-link"></i></a></h1><br /></div>
     <p>
       Add to your sbt (2.11, 2.12):</p>
-    <pre><code class="scala scalatex-site-Styles-highlightMe">libraryDependencies += &quot;io.scalaland&quot; %% &quot;catnip&quot; % &quot;1.0.0&quot;
+    <pre><code class="scala scalatex-site-Styles-highlightMe">libraryDependencies += &quot;io.scalaland&quot; %% &quot;catnip&quot; % &quot;1.1.1&quot;
 addCompilerPlugin(&quot;org.scalamacros&quot; % &quot;paradise&quot; % &quot;2.1.1&quot; cross sbt.CrossVersion.patch)</code></pre>
     <p>
       or, if you use Scala.js:</p>
-    <pre><code class="scala scalatex-site-Styles-highlightMe">libraryDependencies += &quot;io.scalaland&quot; %%% &quot;catnip&quot; % &quot;1.0.0&quot;
+    <pre><code class="scala scalatex-site-Styles-highlightMe">libraryDependencies += &quot;io.scalaland&quot; %%% &quot;catnip&quot; % &quot;1.1.1&quot;
 addCompilerPlugin(&quot;org.scalamacros&quot; % &quot;paradise&quot; % &quot;2.1.1&quot; cross sbt.CrossVersion.patch)</code></pre>
     <p>
-      or with Scala 2.13.0-M4 (JVM-only due to a Scala.js compiler bug):</p>
-    <pre><code class="scala scalatex-site-Styles-highlightMe">libraryDependencies += &quot;io.scalaland&quot; %% &quot;catnip&quot; % &quot;1.0.0&quot;
+      or with Scala 2.13:</p>
+    <pre><code class="scala scalatex-site-Styles-highlightMe">libraryDependencies += &quot;io.scalaland&quot; %% &quot;catnip&quot; % &quot;1.1.1&quot; // or %%% if cross compiling with Scala.js
 scalacOptions += &quot;-Ymacro-annotations&quot;</code></pre>
     <p>
       From now on you can add implicit Kittens-generated type classes for your case classes
@@ -98,7 +98,7 @@ Test(&quot;a&quot;) |+| Test(&quot;b&quot;) // Test(&quot;ab&quot;)
 Test(&quot;a&quot;).show          // &quot;Test(a = a)&quot;</code></pre>
     <p>
       You can also test it with ammonite like:</p>
-    <pre><code class="scala scalatex-site-Styles-highlightMe">import $ivy.`io.scalaland::catnip:1.0.0`, io.scalaland.catnip._, cats._, cats.implicits._
+    <pre><code class="scala scalatex-site-Styles-highlightMe">import $ivy.`io.scalaland::catnip:1.1.1`, io.scalaland.catnip._, cats._, cats.implicits._
 interp.load.plugin.ivy(&quot;org.scalamacros&quot; % &quot;paradise_2.12.4&quot; % &quot;2.1.1&quot;)
 
 @Semi(Eq, Monoid, Functor) final case class Test[A](a: A)
@@ -155,6 +155,29 @@ object TestSemiK {
         That and making sure that compiler <i>sees</i> the resources, since if you define them
         in the same project you want compiler to use them it is not the case).
 </p></ul>
+  <div style="margin: 0px;color: #333;text-align: center;padding: 2.5em 2em 0;border-bottom: 1px solid #eee;display: block;" id="Customizations" class=" scalatex-site-Styles-hoverContainer scalatex-site-Styles-headerTag"><h1 style="margin: 0.2em 0;font-size: 3em;font-weight: 300;">Customizations<a class=" scalatex-site-Styles-headerLink" href="#Customizations" style="position: absolute;right: 0px;"><i class="fa fa-link"></i></a></h1><br /></div>
+    <p>
+      You should be able to extend the abilities of the macro by expanding
+      the content of &lt;pre&gt;derive.semi.conf&lt;/pre&gt;. You can create this file and add it to your library
+      if you want Catnip to support it as all files with that name are looked through during
+      compilation. When it comes to sbt it doesn't always export resources to &lt;pre&gt;Compile&lt;/pre&gt; scope,
+      so your configs might not be visible in your modules while they would be available
+      in created JARs. (Creating somewhat inconsistent experience).
+      Personally, I fixed this by adding something like</p>
+    <pre><code class="scala scalatex-site-Styles-highlightMe">val myProject = project.in(file(&quot;my-project&quot;))
+  // other settings
+  .settings(Compile / unmanagedResourceDirectories += baseDirectory.value / &quot;../src/main/resources&quot;)</code></pre>
+    <p>
+      to sbt. This will make your customizations immediately available to your modules.</p>
+    <p>
+      Take a look at an [example](modules/catnip-custom-example) project to see how customization works in practice.
+</p>
+  <div style="margin: 0px;color: #333;text-align: center;padding: 2.5em 2em 0;border-bottom: 1px solid #eee;display: block;" id="Debugging" class=" scalatex-site-Styles-hoverContainer scalatex-site-Styles-headerTag"><h1 style="margin: 0.2em 0;font-size: 3em;font-weight: 300;">Debugging<a class=" scalatex-site-Styles-headerLink" href="#Debugging" style="position: absolute;right: 0px;"><i class="fa fa-link"></i></a></h1><br /></div>
+    <p>
+      To debug you can use &lt;pre&gt;catnip.debug&lt;/pre&gt; flag:</p>
+    <pre><code class="scala scalatex-site-Styles-highlightMe">&gt; sbt -Dcatnip.debug=debug # show info about derivation
+&gt; sbt -Dcatnip.debug=trace # show even more infor about derivation
+</code></pre>
   <div style="margin: 0px;color: #333;text-align: center;padding: 2.5em 2em 0;border-bottom: 1px solid #eee;display: block;" id="Limitations" class=" scalatex-site-Styles-hoverContainer scalatex-site-Styles-headerTag"><h1 style="margin: 0.2em 0;font-size: 3em;font-weight: 300;">Limitations<a class=" scalatex-site-Styles-headerLink" href="#Limitations" style="position: absolute;right: 0px;"><i class="fa fa-link"></i></a></h1><br /></div>
     <p>
       Type checker complains if you use type aliases from the same compilation unit</p>
@@ -171,7 +194,7 @@ object TestSemiK {
       you should have no issues.</p></div>
 </div><script>
     scalatex.scrollspy.Controller().main(
-      [{"value":"Catnip","children":[{"value":"Usage","children":[]},{"value":"Implemented","children":[]},{"value":"Internals","children":[]},{"value":"Limitations","children":[]}]}]
+      [{"value":"Catnip","children":[{"value":"Usage","children":[]},{"value":"Implemented","children":[]},{"value":"Internals","children":[]},{"value":"Customizations","children":[]},{"value":"Debugging","children":[]},{"value":"Limitations","children":[]}]}]
   )</script><script>
     ['DOMContentLoaded', 'load'].forEach(function(ev){
       addEventListener(ev, function(){
@@ -181,4 +204,4 @@ object TestSemiK {
         );
       })
     })
-  </script></body></html>                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                
+  </script></body></html>                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            
