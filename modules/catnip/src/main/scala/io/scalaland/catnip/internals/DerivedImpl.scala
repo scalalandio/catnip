@@ -137,7 +137,8 @@ private[catnip] object DerivedImpl extends Loggers {
         val source = scala.io.Source.fromURL(url)
         try {
           Validated.valid(
-            source.getLines()
+            source
+              .getLines()
               .map(_.trim)
               .filterNot(_ startsWith raw"""//""")
               .filterNot(_ startsWith raw"""#""")
@@ -162,24 +163,27 @@ private[catnip] object DerivedImpl extends Loggers {
       .sequence
       .map(_.fold(Map.empty[String, Config])(_ ++ _))
 
-  private val mappingsE: ValidatedNel[String, Map[String, Config]] = loadConfig("derive.semi.conf")
-  private val stubsE:    ValidatedNel[String, Map[String, Config]] = loadConfig("derive.stub.conf")
+  private val mappingsE: ValidatedNel[String, Map[String, Config]] = loadConfig("derive.semi.conf").map { map =>
+    map.withDefault { key =>
+      val msg = s"No semi definition found for a type class $key, available definitions:\n${map.mkString("\n")}"
+      throw new NoSuchElementException(msg)
+    }
+  }
+  private val stubsE: ValidatedNel[String, Map[String, Config]] = loadConfig("derive.stub.conf").map { map =>
+    map.withDefault { key =>
+      val msg = s"No stub definition found for object $key, available definitions:\n${map.mkString("\n")}"
+      throw new NoSuchElementException(msg)
+    }
+  }
 
   def impl(c: Context)(annottees: Seq[c.Expr[Any]]): c.Expr[Any] =
     (mappingsE, stubsE).tupled match {
       case Validated.Valid((mappings, stubs)) =>
-        new DerivedImpl(
-          mappings.withDefault { key =>
-            throw new NoSuchElementException(
-              s"No semi definition found for a type class $key, available:\n${mappings.mkString("\n")}"
-            )
-          },
-          stubs.withDefault { key =>
-            throw new NoSuchElementException(
-              s"No stub definition found for object $key, available:\n${stubs.mkString("\n")}"
-            )
-          }
-        )(c)(annottees).derive().asInstanceOf[c.Expr[Any]]
+        try {
+          new DerivedImpl(mappings, stubs)(c)(annottees).derive().asInstanceOf[c.Expr[Any]]
+        } catch {
+          case e: Throwable => c.abort(c.enclosingPosition, e.getMessage)
+        }
       case Validated.Invalid(errors) => c.abort(c.enclosingPosition, errors.mkString_("\n"))
     }
 }

@@ -110,7 +110,7 @@ In order to do so it:
 You should be able to extend the abilities of the macro by expanding
 the content of `derive.semi.conf`. You can create this file and add it to your library
 if you want Catnip to support it as all files with that name are looked through during
-compilation. When it comes to sbt it doesn't export resources to `Compile` scope,
+compilation. When it comes to sbt it doesn't always export resources to `Compile` scope,
 so your configs might not be visible in your modules while they would be available
 in created JARs. (Creating somewhat inconsistent experience).
 Personally, I fixed this by adding something like
@@ -123,7 +123,7 @@ val myProject = project.in(file("my-project"))
 
 to sbt. This will make your customizations immediately available to your modules.
 
-Take a look at an [example](modules/catnip-custom-example) project to see how it works
+Take a look at an [example](modules/catnip-custom-example) project to see how customization works
 in practice.
 
 ## Debugging
