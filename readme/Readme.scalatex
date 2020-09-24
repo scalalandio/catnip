@@ -24,17 +24,17 @@
     @p
       Add to your sbt (2.11, 2.12):
     @hl.scala
-      libraryDependencies += "io.scalaland" %% "catnip" % "1.0.0"
+      libraryDependencies += "io.scalaland" %% "catnip" % "1.1.1"
       addCompilerPlugin("org.scalamacros" % "paradise" % "2.1.1" cross sbt.CrossVersion.patch)
     @p
       or, if you use Scala.js:
     @hl.scala
-      libraryDependencies += "io.scalaland" %%% "catnip" % "1.0.0"
+      libraryDependencies += "io.scalaland" %%% "catnip" % "1.1.1"
       addCompilerPlugin("org.scalamacros" % "paradise" % "2.1.1" cross sbt.CrossVersion.patch)
     @p
-      or with Scala 2.13.0-M4 (JVM-only due to a Scala.js compiler bug):
+      or with Scala 2.13:
     @hl.scala
-      libraryDependencies += "io.scalaland" %% "catnip" % "1.0.0"
+      libraryDependencies += "io.scalaland" %% "catnip" % "1.1.1" // or %%% if cross compiling with Scala.js
       scalacOptions += "-Ymacro-annotations"
     @p
       From now on you can add implicit Kittens-generated type classes for your case classes
@@ -53,7 +53,7 @@
     @p
       You can also test it with ammonite like:
     @hl.scala
-      import $ivy.`io.scalaland::catnip:1.0.0`, io.scalaland.catnip._, cats._, cats.implicits._
+      import $ivy.`io.scalaland::catnip:1.1.1`, io.scalaland.catnip._, cats._, cats.implicits._
       interp.load.plugin.ivy("org.scalamacros" % "paradise_2.12.4" % "2.1.1")
 
       @@Semi(Eq, Monoid, Functor) final case class Test[A](a: A)
@@ -96,7 +96,7 @@
       @li
         turns it into a class name an dealias it (so CO should match the class!)
       @li
-        then reads @link("<pre>derive.semi.conf</pre>", "https://github.com/scalalandio/catnip/tree/master/modules/catnip/src/main/resources/derive.semi.conf")
+        then reads @lnk("derive.semi.conf", "https://github.com/scalalandio/catnip/tree/master/modules/catnip/src/main/resources/derive.semi.conf")
         - this class contains type class to kittens generator mappings
       @li
         for plain types is just paste the body
@@ -111,6 +111,32 @@
         the content of @code{derive.semi.conf}. (Some merge strategy for resources I guess?
         That and making sure that compiler @i{sees} the resources, since if you define them
         in the same project you want compiler to use them it is not the case).
+
+  @sect{Customizations}
+    @p
+      You should be able to extend the abilities of the macro by expanding
+      the content of @code{derive.semi.conf}. You can create this file and add it to your library
+      if you want Catnip to support it as all files with that name are looked through during
+      compilation. When it comes to sbt it doesn't always export resources to @code{Compile} scope,
+      so your configs might not be visible in your modules while they would be available
+      in created JARs. (Creating somewhat inconsistent experience).
+      Personally, I fixed this by adding something like
+    @hl.scala
+      val myProject = project.in(file("my-project"))
+        // other settings
+        .settings(Compile / unmanagedResourceDirectories += baseDirectory.value / "../src/main/resources")
+    @p
+      to sbt. This will make your customizations immediately available to your modules.
+    @p
+      Take a look at an @lnk("example", "https://github.com/scalalandio/catnip/tree/master/modules/catnip-custom-example/")
+      project to see how customization works in practice.
+
+  @sect{Debugging}
+    @p
+      To debug you can use @code{catnip.debug} flag:
+    @hl.scala
+      > sbt -Dcatnip.debug=debug # show info about derivation
+      > sbt -Dcatnip.debug=trace # show even more infor about derivation
 
   @sect{Limitations}
     @p
