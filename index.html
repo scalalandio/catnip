@@ -139,7 +139,7 @@ object TestSemiK {
       <li>
         turns it into a class name an dealias it (so CO should match the class!)</li>
       <li>
-        then reads <link>&lt;pre&gt;derive.semi.conf&lt;/pre&gt;https://github.com/scalalandio/catnip/tree/master/modules/catnip/src/main/resources/derive.semi.conf</link>
+        then reads <link>@code{derive.semi.conf}https://github.com/scalalandio/catnip/tree/master/modules/catnip/src/main/resources/derive.semi.conf</link>
         - this class contains type class to kittens generator mappings</li>
       <li>
         for plain types is just paste the body</li>
@@ -158,9 +158,9 @@ object TestSemiK {
   <div style="margin: 0px;color: #333;text-align: center;padding: 2.5em 2em 0;border-bottom: 1px solid #eee;display: block;" id="Customizations" class=" scalatex-site-Styles-hoverContainer scalatex-site-Styles-headerTag"><h1 style="margin: 0.2em 0;font-size: 3em;font-weight: 300;">Customizations<a class=" scalatex-site-Styles-headerLink" href="#Customizations" style="position: absolute;right: 0px;"><i class="fa fa-link"></i></a></h1><br /></div>
     <p>
       You should be able to extend the abilities of the macro by expanding
-      the content of &lt;pre&gt;derive.semi.conf&lt;/pre&gt;. You can create this file and add it to your library
+      the content of <code>derive.semi.conf</code>. You can create this file and add it to your library
       if you want Catnip to support it as all files with that name are looked through during
-      compilation. When it comes to sbt it doesn't always export resources to &lt;pre&gt;Compile&lt;/pre&gt; scope,
+      compilation. When it comes to sbt it doesn't always export resources to <code>Compile</code> scope,
       so your configs might not be visible in your modules while they would be available
       in created JARs. (Creating somewhat inconsistent experience).
       Personally, I fixed this by adding something like</p>
@@ -174,7 +174,7 @@ object TestSemiK {
 </p>
   <div style="margin: 0px;color: #333;text-align: center;padding: 2.5em 2em 0;border-bottom: 1px solid #eee;display: block;" id="Debugging" class=" scalatex-site-Styles-hoverContainer scalatex-site-Styles-headerTag"><h1 style="margin: 0.2em 0;font-size: 3em;font-weight: 300;">Debugging<a class=" scalatex-site-Styles-headerLink" href="#Debugging" style="position: absolute;right: 0px;"><i class="fa fa-link"></i></a></h1><br /></div>
     <p>
-      To debug you can use &lt;pre&gt;catnip.debug&lt;/pre&gt; flag:</p>
+      To debug you can use <code>catnip.debug</code> flag:</p>
     <pre><code class="scala scalatex-site-Styles-highlightMe">&gt; sbt -Dcatnip.debug=debug # show info about derivation
 &gt; sbt -Dcatnip.debug=trace # show even more infor about derivation
 </code></pre>
@@ -204,4 +204,4 @@ object TestSemiK {
         );
       })
     })
-  </script></body></html>                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            
+  </script></body></html>                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        
