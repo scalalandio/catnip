@@ -33,54 +33,58 @@ private[catnip] class DerivedImpl(mappings: Map[String, Config], stubs: Map[Stri
   private def isParametrized(name: TypeName): String => Boolean =
     s"""(^|[,\\[])$name([,\\]]|$$)""".r.pattern.asPredicate.test _
 
+  private def generateBody(name:          TypeName,
+                           typeClassName: TypeClass,
+                           params:        Seq[TypeDef],
+                           ctorParamsOpt: Option[Seq[Seq[ValDef]]]): ValOrDefDef = {
+    val fType       = str2TypeConstructor(typeClassName.toString)
+    val otherReqTCs = mappings(fType.toString).arguments.map(str2TypeConstructor)
+    val needKind    = util.Try(c.typecheck(c.parse(s"null: $fType[List]"))).isSuccess
+    val implName    = TermName(s"_derived_${fType.toString.replace('.', '_')}")
+    lazy val aType  = TypeName(if (params.nonEmpty) tq"$name[..${params.map(_.name)}]".toString else name.toString)
+    lazy val usedParams = ctorParamsOpt match {
+      case Some(ctorParams) =>
+        lazy val used = ctorParams.flatten.groupBy(_.tpt.toString).flatMap(_._2.headOption.toList).map(_.tpt.toString)
+        if (needKind) Nil else params.map(_.name).filter(name => used.exists(isParametrized(name)))
+      case None =>
+        if (needKind) Nil else params.map(_.name)
+    }
+    val providerArgs = usedParams
+      .flatMap { p =>
+        (fType :: otherReqTCs).map(tpe => s"${tpe.toString.replace('.', '_')}_$p: $tpe[$p]")
+      }
+      .map(c.parse)
+    lazy val suppressUnused = usedParams
+      .flatMap { p =>
+        (fType :: otherReqTCs).map(tpe => s"${tpe.toString.replace('.', '_')}_$p.hashCode;")
+      }
+      .mkString("")
+    val tcForType  = if (needKind) name else aType
+    val body       = c.parse(s"{ $suppressUnused${mappings(fType.toString).target}[$tcForType] }")
+    val returnType = tq"$fType[$tcForType]"
+    val sanitizedParams = params.map {
+      case TypeDef(_: Modifiers, name: TypeName, tparams: List[TypeDef], rhs: Tree) =>
+      TypeDef(Modifiers(), name, tparams, rhs)
+    }
+    // TODO: figure out why c.parse is needed :/
+    if (usedParams.isEmpty) c.parse(s"""implicit val $implName: $returnType = $body""").asInstanceOf[ValDef]
+    else
+      c.parse(q"""implicit def $implName[..$sanitizedParams](implicit ..$providerArgs): $returnType = $body""".toString)
+        .asInstanceOf[DefDef]
+  }
+
   private def buildDerivation(classDef: ClassDef, typeClassName: TypeClass): ValOrDefDef = classDef match {
     case q"""$_ trait $name[..${params: Seq[TypeDef] }]
                   extends { ..$_ }
                   with ..$_ { $_ => ..$_ }""" =>
       withTraceLog(s"Derivation expanded for $name trait") {
-        val fType      = str2TypeConstructor(typeClassName.toString)
-        val implName   = TermName(s"_derived_${fType.toString.replace('.', '_')}")
-        lazy val aType = if (params.nonEmpty) TypeName(tq"$name[..${params.map(_.name)}]".toString) else name
-        val body       = c.parse(s"{ ${mappings(fType.toString).target}[$aType] }")
-        val returnType = tq"$fType[$aType]"
-        // TODO: figure out, why this doesn't work
-        // q"""implicit val $implName: $returnType = $body""": ValDef
-        c.parse(s"""implicit val $implName: $returnType = $body""").asInstanceOf[ValDef]
+        generateBody(name, typeClassName, params, None)
       }
     case q"""$_ class $name[..${params: Seq[TypeDef] }] $_(...${ctorParams: Seq[Seq[ValDef]] })
                   extends { ..$_ }
                   with ..$_ { $_ => ..$_ }""" =>
       withTraceLog(s"Derivation expanded for $name class") {
-        val fType       = str2TypeConstructor(typeClassName.toString)
-        val otherReqTCs = mappings(fType.toString).arguments.map(str2TypeConstructor)
-        val needKind    = util.Try(c.typecheck(c.parse(s"null: $fType[List]"))).isSuccess
-        val implName    = TermName(s"_derived_${fType.toString.replace('.', '_')}")
-        lazy val aType  = TypeName(if (params.nonEmpty) tq"$name[..${params.map(_.name)}]".toString else name.toString)
-        lazy val argTypes =
-          ctorParams.flatten.groupBy(_.tpt.toString).flatMap(_._2.headOption.toList).map(_.tpt.toString)
-        lazy val usedParams =
-          if (needKind) Nil
-          else params.map(_.name).filter(name => argTypes.exists(isParametrized(name)))
-        val providerArgs = usedParams
-          .flatMap { p =>
-            (fType :: otherReqTCs).map(tpe => s"${tpe.toString.replace('.', '_')}_$p: $tpe[$p]")
-          }
-          .map(c.parse)
-        lazy val suppressUnused = usedParams
-          .flatMap { p =>
-            (fType :: otherReqTCs).map(tpe => s"${tpe.toString.replace('.', '_')}_$p.hashCode;")
-          }
-          .mkString("")
-        val tcForType  = if (needKind) name else aType
-        val body       = c.parse(s"{ $suppressUnused${mappings(fType.toString).target}[$tcForType] }")
-        val returnType = tq"$fType[$tcForType]"
-        // TODO: figure out, why this doesn't work
-        // if (usedParams.isEmpty) q"""implicit val $implName: $returnType = $body""":                   ValDef
-        // else q"""implicit def $implName[..$params](implicit ..$providerArgs): $returnType = $body""": DefDef
-        if (usedParams.isEmpty) c.parse(s"""implicit val $implName: $returnType = $body""").asInstanceOf[ValDef]
-        else
-          c.parse(q"""implicit def $implName[..$params](implicit ..$providerArgs): $returnType = $body""".toString)
-            .asInstanceOf[DefDef]
+        generateBody(name, typeClassName, params, Some(ctorParams))
       }
   }
 
